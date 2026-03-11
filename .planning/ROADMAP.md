@@ -2,81 +2,66 @@
 
 ## Overview
 
-This roadmap turns the existing V5 script pipeline into an internal web workspace without changing the frozen business logic. The sequence is deliberate: establish product and data foundations first, then solve upload and persistent-history workflow, then operationalize the V5 engine as a managed run service, and only after that build the results UX and optional reporting enhancements.
+This roadmap now starts with a stateless MVP. The first goal is not to solve long-term data management; it is to replace the current local script workflow with a browser-based upload, calculate, QA, and export flow using the frozen V5 logic. Persistent storage, append-only sales history, and duplicate-safe monthly ingestion are intentionally deferred until the lean workflow proves useful.
 
 ## Phases
 
-- [ ] **Phase 1: Platform Foundation** - Create the internal web app skeleton, access control, and storage backbone
-- [ ] **Phase 2: Dataset Ingestion** - Build managed uploads and validation for run-scoped datasets
-- [ ] **Phase 3: Sales History Persistence** - Create append-only sales history with duplicate-safe monthly ingestion
-- [ ] **Phase 4: V5 Calculation Runs** - Extract and run the frozen V5 logic as an async backend job
-- [ ] **Phase 5: Results Workspace** - Deliver QA review, result exploration, and export workflow in the web UI
+- [ ] **Phase 1: Workspace Foundation** - Create the internal web app shell and temporary run workspace
+- [ ] **Phase 2: Run Input Workflow** - Build per-run file upload and validation for required inputs
+- [ ] **Phase 3: V5 Calculation Runs** - Extract and run the frozen V5 logic from uploaded files
+- [ ] **Phase 4: Results Workspace** - Deliver QA review and export workflow in the web UI
+- [ ] **Phase 5: Persistence Enhancements** - Add stored history, duplicate protection, and reusable dataset management after MVP
 
 ## Phase Details
 
-### Phase 1: Platform Foundation
-**Goal**: The project has a working internal web/app backend foundation with authenticated access and persistent storage primitives.
+### Phase 1: Workspace Foundation
+**Goal**: The project has a working internal web app foundation with temporary run storage and no persistent business-data layer.
 **Depends on**: Nothing (first phase)
-**Requirements**: AUTH-01, AUTH-02
+**Requirements**: OPS-01, OPS-02
 **Success Criteria** (what must be TRUE):
-  1. Internal users can access the workspace only after authentication
-  2. The system has a persistent database and file storage layer ready for datasets and exports
-  3. The app scaffold supports separate UI, API, and worker responsibilities
+  1. Internal users can open the workspace from the approved environment
+  2. The app can create and clean up temporary working folders/files for uploaded run inputs and outputs
+  3. The app scaffold supports UI and calculation backend responsibilities in one lean deployable system
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Scaffold frontend, backend, and shared project structure
-- [ ] 01-02: Implement authentication and protected internal routes
-- [ ] 01-03: Provision database schema baseline and file storage integration
+- [ ] 01-01: Scaffold the web app shell and define the V5 integration boundary
+- [ ] 01-02: Implement temporary run workspace handling and cleanup behavior
+- [ ] 01-03: Configure lean internal deployment for the chosen host environment
 
-### Phase 2: Dataset Ingestion
-**Goal**: Users can upload stock, SKU, and site-map datasets through the browser with schema validation and visible ingestion feedback.
+### Phase 2: Run Input Workflow
+**Goal**: Users can upload the required run-scoped datasets through the browser with validation feedback.
 **Depends on**: Phase 1
 **Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05
 **Success Criteria** (what must be TRUE):
-  1. User can upload each required dataset type from the web UI
+  1. User can upload each required file type from the web UI for a run
   2. Invalid files are rejected with clear validation feedback
-  3. Accepted datasets are stored as versioned records with raw-file lineage
+  3. Valid files are staged only for the active run and do not require persistent history
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Build dataset models and ingestion endpoints
+- [ ] 02-01: Build upload endpoints and temporary file models for run inputs
 - [ ] 02-02: Implement schema validation and ingestion warnings
-- [ ] 02-03: Build upload and dataset-history UI for run-scoped inputs
+- [ ] 02-03: Build upload UI for sales, stock, SKU, and site-mapping files
 
-### Phase 3: Sales History Persistence
-**Goal**: Sales history becomes a persistent append-only dataset with duplicate-safe monthly updates.
+### Phase 3: V5 Calculation Runs
+**Goal**: The frozen V5 logic runs from uploaded files inside the web workflow and returns a completed run result.
 **Depends on**: Phase 2
-**Requirements**: HIST-01, HIST-02, HIST-03, HIST-04
-**Success Criteria** (what must be TRUE):
-  1. User can append only a new month of sales data to stored history
-  2. Duplicate sales uploads are detected before commit
-  3. User can see what history periods are already stored
-**Plans**: 3 plans
-
-Plans:
-- [ ] 03-01: Define normalized sales-history schema and business keys
-- [ ] 03-02: Implement append-only ingest and duplicate-detection logic
-- [ ] 03-03: Build sales-history management UI and period visibility
-
-### Phase 4: V5 Calculation Runs
-**Goal**: The frozen V5 logic runs asynchronously as a managed backend job using explicit dataset versions.
-**Depends on**: Phase 3
 **Requirements**: RUN-01, RUN-02, RUN-03
 **Success Criteria** (what must be TRUE):
   1. User can create a run for a selected month from the web app
-  2. Backend worker executes the V5 logic asynchronously and tracks status
-  3. Each run preserves its input lineage, timestamps, and stored outputs
+  2. Backend executes the V5 logic and returns success or failure clearly
+  3. User can rerun by uploading the required files again without relying on stored business history
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Extract V5 calculation engine from script form into reusable backend code
-- [ ] 04-02: Implement async run orchestration and job tracking
-- [ ] 04-03: Persist run outputs, warnings, and export artifacts
+- [ ] 03-01: Extract V5 calculation engine from script form into reusable backend code
+- [ ] 03-02: Implement run orchestration, error handling, and session-visible status
+- [ ] 03-03: Generate temporary result artifacts for downstream review and export
 
-### Phase 5: Results Workspace
+### Phase 4: Results Workspace
 **Goal**: Users can trust, review, and export run results from a browser workflow.
-**Depends on**: Phase 4
+**Depends on**: Phase 3
 **Requirements**: RES-01, RES-02, RES-03, RES-04, RES-05
 **Success Criteria** (what must be TRUE):
   1. User can view summaries and detail results for a completed run
@@ -85,9 +70,24 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: Build run results pages and summary/detail views
-- [ ] 05-02: Build QA and explainability surfaces for trust and troubleshooting
-- [ ] 05-03: Implement export generation and download workflow
+- [ ] 04-01: Build run results pages and summary/detail views
+- [ ] 04-02: Build QA and explainability surfaces for trust and troubleshooting
+- [ ] 04-03: Implement export generation and download workflow
+
+### Phase 5: Persistence Enhancements
+**Goal**: The product evolves beyond the stateless MVP by adding stored history and duplicate-safe monthly ingestion.
+**Depends on**: Phase 4
+**Requirements**: HIST-01, HIST-02, HIST-03, HIST-04, HIST-05
+**Success Criteria** (what must be TRUE):
+  1. Sales history persists across months instead of being re-uploaded every run
+  2. Duplicate monthly sales uploads are detected before commit
+  3. Users can see stored history coverage and reusable dataset lineage
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01: Define persistent data model and business keys for stored history
+- [ ] 05-02: Implement append-only ingest and duplicate-detection logic
+- [ ] 05-03: Build stored-history and dataset-management UI
 
 ## Progress
 
@@ -96,8 +96,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Platform Foundation | 0/3 | Not started | - |
-| 2. Dataset Ingestion | 0/3 | Not started | - |
-| 3. Sales History Persistence | 0/3 | Not started | - |
-| 4. V5 Calculation Runs | 0/3 | Not started | - |
-| 5. Results Workspace | 0/3 | Not started | - |
+| 1. Workspace Foundation | 0/3 | Not started | - |
+| 2. Run Input Workflow | 0/3 | Not started | - |
+| 3. V5 Calculation Runs | 0/3 | Not started | - |
+| 4. Results Workspace | 0/3 | Not started | - |
+| 5. Persistence Enhancements | 0/3 | Deferred | - |

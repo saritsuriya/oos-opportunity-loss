@@ -1,5 +1,7 @@
 # Research Summary
 
+Note: this document captures the recommended end-state architecture from research. On 2026-03-11, project scope was intentionally reduced for execution so the current delivery plan starts with a stateless/no-storage MVP first, with persistence deferred to a later phase.
+
 ## Stack
 
 Recommended stack:

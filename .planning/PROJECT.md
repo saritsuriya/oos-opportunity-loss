@@ -2,11 +2,11 @@
 
 ## What This Is
 
-An internal web application for the operations team to run the OOS opportunity-loss calculation using the frozen V5 business logic. It replaces the current script-and-files workflow with a managed upload, append, validate, calculate, QA, and export experience so users can operate the process from the browser without re-uploading full history every month.
+An internal web application for the operations team to run the OOS opportunity-loss calculation using the frozen V5 business logic. The first delivery is intentionally lean: users upload the required files for a run, execute the calculation from the browser, review QA, and export results without introducing persistent business-data storage yet.
 
 ## Core Value
 
-Make monthly opportunity-loss calculation reliable, explainable, and operationally easy without changing the current V5 business logic.
+Make monthly opportunity-loss calculation easier to operate from the browser without changing the current V5 business logic.
 
 ## Requirements
 
@@ -18,14 +18,18 @@ Make monthly opportunity-loss calculation reliable, explainable, and operational
 
 ### Active
 
-- [ ] Internal ops users can upload source files through a web UI instead of running local scripts
-- [ ] Sales history is stored persistently so future months only need delta uploads, not full-history re-uploads
-- [ ] The system detects duplicate monthly sales uploads before they corrupt the persisted history
-- [ ] Users can upload the calculate-month stock snapshot and the SKU universe / live-product file for each run
-- [ ] Users can run the frozen V5 logic as a managed calculation job with visible run status
-- [ ] Users can review QA warnings and input coverage before trusting the result
+- [ ] Internal ops users can upload the required source files through a web UI instead of running local scripts
+- [ ] Users can run the frozen V5 logic from the browser for a selected month using run-scoped inputs
+- [ ] Users can review QA warnings and key explainability fields before trusting the result
 - [ ] Users can export result files in `.xlsx` and `.csv`
-- [ ] Optional dashboards can summarize outputs, but the primary v1 focus is the operational run workflow
+- [ ] The app uses temporary run files only for the active job and does not yet persist business history across months
+
+### Deferred
+
+- [ ] Persist sales history so future months only need delta uploads
+- [ ] Detect duplicate monthly sales uploads before they are appended to stored history
+- [ ] Store dataset lineage and reusable dataset versions across runs
+- [ ] Add dashboards and month-over-month reporting views
 
 ### Out of Scope
 
@@ -36,13 +40,13 @@ Make monthly opportunity-loss calculation reliable, explainable, and operational
 
 ## Context
 
-The existing repository is a brownfield analytics codebase with multiple script generations. `v5_daily_oos_opportunity/` is the current source of truth for business logic, but it still operates as a local CLI pipeline over CSV/XLSX files and local output folders. The main operational pain point is that sales-performance history should accumulate across months instead of being uploaded from scratch every period, while stock snapshot and SKU-universe inputs remain run-specific. The future product must preserve trust in the output by making data lineage, validation, and QA visible to users.
+The existing repository is a brownfield analytics codebase with multiple script generations. `v5_daily_oos_opportunity/` is the current source of truth for business logic, but it still operates as a local CLI pipeline over CSV/XLSX files and local output folders. Although longer-term workflow value will come from persistent history and duplicate-safe monthly ingestion, the immediate goal is to prove a simpler browser-based runner that preserves V5 output quality without committing to storage architecture too early.
 
 ## Constraints
 
 - **Business Logic**: Preserve the current V5 formula and assumptions — the team wants the web app to operationalize the current model, not change it
-- **Users**: Internal operations team only for v1 — optimize for expert internal workflow rather than public-product polish
-- **Data Flow**: Managed uploads with persistent history — monthly sales should be append-only with duplicate protection
+- **Users**: Internal operations team only for this phase — optimize for expert internal workflow rather than public-product polish
+- **Data Flow**: This phase is stateless — required files are uploaded per run, processed temporarily, and then discarded after completion/expiry
 - **Output**: Excel export is mandatory — users still need `.xlsx` as a business deliverable
 - **Architecture**: Brownfield extraction from scripts — calculation logic should be extracted from the current Python pipeline instead of rewritten blindly
 
@@ -50,11 +54,11 @@ The existing repository is a brownfield analytics codebase with multiple script 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Use V5 as the canonical calculation model | Current team has frozen the logic and wants the product built on top of it | — Pending |
-| Build internal web workspace first | Main need is operational ease for internal users, not external productization | — Pending |
-| Persist sales history and append deltas monthly | Removes repeated full-history uploads and matches the team’s stated operating model | — Pending |
-| Keep stock snapshot and SKU universe as run-scoped uploads | These inputs are tied to the calculation month and should remain explicit per run | — Pending |
-| Prioritize workflow over dashboards in v1 | The first pain to solve is upload/validate/run/export reliability | — Pending |
+| Use V5 as the canonical calculation model | Current team has frozen the logic and wants the product built on top of it | Accepted |
+| Build a stateless MVP first | Reduces implementation risk and avoids premature storage architecture decisions | Accepted |
+| Defer sales-history persistence and duplicate detection | Valuable later, but not required to prove the browser workflow | Accepted |
+| Keep all required datasets explicit per run in phase 1 | Makes the first release easier to reason about and easier to operate safely | Accepted |
+| Prioritize run workflow over dashboards in v1 | The first pain to solve is upload, calculate, QA, and export reliability | Accepted |
 
 ---
-*Last updated: 2026-03-11 after initialization*
+*Last updated: 2026-03-11 after stateless MVP scope decision*
