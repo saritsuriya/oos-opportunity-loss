@@ -15,6 +15,7 @@ try:
         get_upload_slots,
         stage_uploaded_file,
     )
+    from streamlit_app.services.v5_boundary import get_bundled_site_mapping_status
 except ModuleNotFoundError:
     from services.input_validation import validate_staged_input
     from services.upload_staging import (
@@ -23,6 +24,7 @@ except ModuleNotFoundError:
         get_upload_slots,
         stage_uploaded_file,
     )
+    from services.v5_boundary import get_bundled_site_mapping_status
 
 UPLOAD_VALIDATION_RESULTS_KEY = "upload_validation_results"
 UPLOAD_UPLOAD_SIGNATURES_KEY = "upload_widget_signatures"
@@ -52,6 +54,8 @@ def render_upload_inputs_step() -> None:
             with st.container(border=True):
                 _render_slot_card(slot.key, registry[slot.key], validation_results)
 
+    st.divider()
+    _render_site_mapping_panel()
     st.session_state[UPLOAD_STEP_READINESS_KEY] = readiness
 
 
@@ -184,6 +188,7 @@ def _render_current_file_state(
 
     errors = tuple(validation_result.get("errors", ()))
     warnings = tuple(validation_result.get("warnings", ()))
+    _render_validation_summary(validation_result)
     if errors:
         st.error("Blocking validation issues found:")
         for issue in errors:
@@ -194,6 +199,30 @@ def _render_current_file_state(
             st.warning(issue["message"])
     else:
         st.success("File staged successfully and passed Phase 2 validation.")
+
+
+def _render_validation_summary(validation_result: Mapping[str, object]) -> None:
+    summary = validation_result.get("summary")
+    if not isinstance(summary, Mapping):
+        return
+
+    lines: list[str] = []
+    row_count = summary.get("row_count")
+    if row_count is not None:
+        lines.append(f"**Row count:** {row_count}")
+    date_field = summary.get("date_field")
+    if date_field:
+        lines.append(f"**Date field:** {date_field}")
+    min_date = summary.get("min_date")
+    max_date = summary.get("max_date")
+    if min_date and max_date:
+        lines.append(f"**Date coverage:** {min_date} to {max_date}")
+    month_hints = tuple(summary.get("month_hints", ()))
+    if month_hints:
+        lines.append(f"**Month hints:** {', '.join(str(month) for month in month_hints)}")
+
+    if lines:
+        st.markdown("\n".join(lines))
 
 
 def _compute_readiness(
@@ -243,3 +272,28 @@ def _format_file_size(size_bytes: int) -> str:
     if size_bytes < 1024 * 1024:
         return f"{size_bytes / 1024:.1f} KB"
     return f"{size_bytes / (1024 * 1024):.1f} MB"
+
+
+def _render_site_mapping_panel() -> None:
+    status = get_bundled_site_mapping_status()
+
+    with st.container(border=True):
+        st.subheader("Bundled Site Mapping")
+        if status.is_ready:
+            st.success(status.status_label)
+        else:
+            st.error(status.status_label)
+
+        path_col, row_col, virtual_col, site_col = st.columns(4)
+        path_col.metric("Mapping Source", "Bundled")
+        row_col.metric("Rows", status.active_mapping_rows if status.is_ready else status.total_rows)
+        virtual_col.metric("Virtual Sites", status.virtual_site_count)
+        site_col.metric("Mapped Sites", status.site_count)
+
+        st.caption(status.path)
+        for line in status.details:
+            st.markdown(f"- {line}")
+        if status.sample_virtual_sites:
+            st.markdown(
+                "**Sample virtual sites:** " + ", ".join(status.sample_virtual_sites)
+            )
