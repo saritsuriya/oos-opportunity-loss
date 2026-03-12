@@ -13,6 +13,7 @@ try:
         set_current_step,
     )
     from streamlit_app.services.v5_boundary import get_boundary_overview
+    from streamlit_app.ui.upload_inputs import UPLOAD_STEP_READINESS_KEY, render_upload_inputs_step
 except ModuleNotFoundError:
     from runtime.session_state import (
         advance_step,
@@ -22,6 +23,7 @@ except ModuleNotFoundError:
         set_current_step,
     )
     from services.v5_boundary import get_boundary_overview
+    from ui.upload_inputs import UPLOAD_STEP_READINESS_KEY, render_upload_inputs_step
 
 
 def _render_shell_summary(step_index: int, total_steps: int) -> None:
@@ -44,9 +46,9 @@ def _render_step_map(step_index: int) -> None:
             status = "Placeholder"
         with column:
             st.markdown(f"**{index + 1}. {step.label}**")
-            st.caption(step.phase_hint)
+            st.caption(_display_phase_hint(step.slug, step.phase_hint))
             st.write(status)
-            st.write(step.summary)
+            st.write(_display_step_summary(step.slug, step.summary))
 
 
 def _render_boundary_summary() -> None:
@@ -88,16 +90,7 @@ def _render_current_step() -> None:
             "or storage behavior so the V5 flow can be integrated without creating a second path."
         )
     elif step.slug == "upload-inputs":
-        st.warning("Placeholder for Phase 2 input staging.")
-        st.markdown(
-            "\n".join(
-                [
-                    "- Sales, stock, and SKU upload widgets will land here next.",
-                    "- Uploaded files will be copied into a per-session temporary workspace.",
-                    "- The bundled site-mapping configuration will be shown read-only in this step.",
-                ]
-            )
-        )
+        render_upload_inputs_step()
     elif step.slug == "run-v5":
         st.warning("Placeholder for Phase 3 V5 run orchestration.")
         st.markdown(
@@ -124,6 +117,9 @@ def _render_current_step() -> None:
 
 def _render_navigation() -> None:
     previous_col, spacer_col, next_col = st.columns([1, 2, 1])
+    step = get_wizard_steps()[current_step_index()]
+    readiness = st.session_state.get(UPLOAD_STEP_READINESS_KEY, {})
+    next_disabled = step.slug == "upload-inputs" and not bool(readiness.get("is_ready"))
     with previous_col:
         if st.button("Previous step", disabled=current_step_index() == 0):
             rewind_step()
@@ -131,12 +127,26 @@ def _render_navigation() -> None:
     with next_col:
         last_step = current_step_index() == len(get_wizard_steps()) - 1
         label = "Restart wizard" if last_step else "Next step"
-        if st.button(label):
+        if st.button(label, disabled=next_disabled and not last_step):
             if last_step:
                 set_current_step(0)
             else:
                 advance_step()
             st.rerun()
+    if next_disabled:
+        st.caption("Upload all three required inputs and resolve blocking errors to continue.")
+
+
+def _display_phase_hint(step_slug: str, default_hint: str) -> str:
+    if step_slug == "upload-inputs":
+        return "Phase 2 live now"
+    return default_hint
+
+
+def _display_step_summary(step_slug: str, default_summary: str) -> str:
+    if step_slug == "upload-inputs":
+        return "Stage and validate the three required run-scoped input files from one screen."
+    return default_summary
 
 
 def render_wizard_shell() -> None:
