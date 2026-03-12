@@ -25,7 +25,7 @@ This roadmap now starts with a stateless MVP. The first goal is not to solve lon
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Scaffold the web app shell and define the V5 integration boundary
+- [x] 01-01: Scaffold the web app shell and define the V5 integration boundary
 - [ ] 01-02: Implement temporary run workspace handling and cleanup behavior
 - [ ] 01-03: Configure lean internal deployment for the chosen host environment
 
@@ -98,7 +98,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Workspace Foundation | 0/3 | Not started | - |
+| 1. Workspace Foundation | 1/3 | In Progress | 01-01 |
 | 2. Run Input Workflow | 0/3 | Not started | - |
 | 3. V5 Calculation Runs | 0/3 | Not started | - |
 | 4. Results Workspace | 0/3 | Not started | - |

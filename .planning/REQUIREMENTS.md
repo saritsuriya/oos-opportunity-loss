@@ -7,7 +7,7 @@
 
 ### Workspace Access And Runtime
 
-- [ ] **OPS-01**: Internal operator can access the workspace from the approved environment
+- [x] **OPS-01**: Internal operator can access the workspace from the approved environment
 - [ ] **OPS-02**: System stores uploaded files and generated outputs only temporarily for the active run and cleans them up automatically
 
 ### Run Input Management
@@ -75,7 +75,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPS-01 | Phase 1 | Pending |
+| OPS-01 | Phase 1 | Complete |
 | OPS-02 | Phase 1 | Pending |
 | DATA-01 | Phase 2 | Pending |
 | DATA-02 | Phase 2 | Pending |
