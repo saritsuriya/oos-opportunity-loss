@@ -6,7 +6,7 @@ This roadmap now starts with a stateless MVP. The first goal is not to solve lon
 
 ## Phases
 
-- [ ] **Phase 1: Workspace Foundation** - Create the internal web app shell and temporary run workspace
+- [x] **Phase 1: Workspace Foundation** - Create the internal web app shell and temporary run workspace
 - [ ] **Phase 2: Run Input Workflow** - Build per-run file upload and validation for required inputs
 - [ ] **Phase 3: V5 Calculation Runs** - Extract and run the frozen V5 logic from uploaded files
 - [ ] **Phase 4: Results Workspace** - Deliver QA review and export workflow in the web UI
@@ -27,7 +27,7 @@ This roadmap now starts with a stateless MVP. The first goal is not to solve lon
 Plans:
 - [x] 01-01: Scaffold the web app shell and define the V5 integration boundary
 - [x] 01-02: Implement temporary run workspace handling and cleanup behavior
-- [ ] 01-03: Configure lean internal deployment for the chosen host environment
+- [x] 01-03: Configure lean internal deployment for the chosen host environment
 
 ### Phase 2: Run Input Workflow
 **Goal**: Users can upload the required run-scoped datasets through the browser with validation feedback.
@@ -98,7 +98,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Workspace Foundation | 2/3 | In Progress | 01-01, 01-02 |
+| 1. Workspace Foundation | 3/3 | Complete | 01-01, 01-02, 01-03 |
 | 2. Run Input Workflow | 0/3 | Not started | - |
 | 3. V5 Calculation Runs | 0/3 | Not started | - |
 | 4. Results Workspace | 0/3 | Not started | - |
