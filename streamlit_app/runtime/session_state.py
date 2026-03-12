@@ -8,6 +8,11 @@ from uuid import uuid4
 
 import streamlit as st
 
+try:
+    from streamlit_app.runtime.temp_workspace import ensure_session_workspace
+except ModuleNotFoundError:
+    from runtime.temp_workspace import ensure_session_workspace
+
 
 @dataclass(frozen=True)
 class WizardStep:
@@ -52,7 +57,7 @@ def get_wizard_steps() -> tuple[WizardStep, ...]:
 def bootstrap_session_state() -> dict[str, object]:
     defaults: dict[str, object] = {
         "session_bootstrapped": True,
-        "session_id": uuid4().hex[:8].upper(),
+        "session_id": uuid4().hex[:16].upper(),
         "session_started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "current_step_index": 0,
         "workspace_mode": "Stateless MVP",
@@ -64,7 +69,14 @@ def bootstrap_session_state() -> dict[str, object]:
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
-    return {key: st.session_state[key] for key in defaults}
+
+    workspace = ensure_session_workspace(str(st.session_state["session_id"]))
+    workspace_state = workspace.as_session_state()
+    for key, value in workspace_state.items():
+        st.session_state[key] = value
+
+    state_keys = [*defaults.keys(), *workspace_state.keys()]
+    return {key: st.session_state[key] for key in state_keys}
 
 
 def current_step_index() -> int:
