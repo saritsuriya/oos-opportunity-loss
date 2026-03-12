@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-12T04:52:51Z"
-last_activity: 2026-03-12 — Completed Plan 01-01 for the Streamlit workspace foundation
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-12T05:03:46Z"
+last_activity: 2026-03-12 — Completed Plan 01-02 for the Streamlit workspace foundation
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -21,36 +21,37 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-11)
 
 **Core value:** Make monthly opportunity-loss calculation easier to operate from the browser without changing the current V5 business logic.
-**Current focus:** Phase 1 execution after completing the Streamlit workspace foundation plan
+**Current focus:** Phase 1 execution after completing the temp workspace lifecycle plan
 
 ## Current Position
 
 Phase: 1 of 5 (Workspace Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-03-12 — Completed Plan 01-01 for the Streamlit workspace foundation
+Last activity: 2026-03-12 — Completed Plan 01-02 for the Streamlit workspace foundation
 
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 8 min
-- Total execution time: 0.1 hours
+- Total plans completed: 2
+- Average duration: 5.5 min
+- Total execution time: 0.2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 1 | 8 min | 8 min |
+| 01 | 2 | 11 min | 5.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (8 min)
-- Trend: N/A
+- Last 5 plans: 01-01 (8 min), 01-02 (3 min)
+- Trend: Faster after the initial shell bootstrap
 
 **Recent plan metrics:**
 - Phase 01 P01 | 8 min | 3 tasks | 11 files
+- Phase 01 P02 | 3 min | 3 tasks | 4 files
 
 ## Accumulated Context
 
@@ -65,6 +66,9 @@ Recent decisions affecting current work:
 - MVP scope: Site mapping is bundled config, not a user-uploaded file
 - [Phase 01]: Kept V5 imports behind a lazy boundary so the Streamlit shell boots without the CLI entrypoint.
 - [Phase 01]: Surface bundled site-mapping configuration in the shell as read-only system context.
+- [Phase 01-workspace-foundation]: Resolve each session workspace during bootstrap so later phases can trust session-state paths immediately.
+- [Phase 01-workspace-foundation]: Keep cleanup stateless and filesystem-local by pruning temporary roots based on recent file activity instead of adding persistence.
+- [Phase 01-workspace-foundation]: Scope stale cleanup to managed session directories only so pruning does not touch unrelated folders under the same base path.
 
 ### Pending Todos
 
@@ -76,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T04:51:35.643Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-03-12T05:02:39.088Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
