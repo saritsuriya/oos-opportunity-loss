@@ -10,7 +10,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from streamlit_app.runtime.temp_workspace import ensure_session_workspace
-from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY, ensure_upload_registry
+from streamlit_app.services.upload_staging import (
+    UPLOAD_REGISTRY_KEY,
+    ensure_upload_registry,
+    stage_uploaded_file,
+)
 
 
 def test_session_upload_registry_uses_active_workspace_input_dir(tmp_path: Path) -> None:
@@ -43,3 +47,60 @@ def test_session_upload_registry_bootstrap_exposes_slot_state(tmp_path: Path, mo
         assert slot_state["slot_key"] == slot_key
         assert slot_dir.is_relative_to(workspace_input_dir)
         assert slot_state["current_file"] is None
+
+
+def test_replace_upload_staging_overwrites_existing_slot_file(tmp_path: Path) -> None:
+    workspace = ensure_session_workspace("replace-sales-session", base_dir=tmp_path)
+    registry = ensure_upload_registry({"workspace_input_dir": str(workspace.input_dir)})
+
+    first = stage_uploaded_file(
+        FakeUpload("march-sales.xlsx", b"first-version"),
+        slot_key="sales",
+        workspace_input_dir=workspace.input_dir,
+        registry=registry,
+    )
+    second = stage_uploaded_file(
+        FakeUpload("march-sales.tsv", b"second-version"),
+        slot_key="sales",
+        workspace_input_dir=workspace.input_dir,
+        registry=registry,
+    )
+
+    staged_files = tuple(sorted((workspace.input_dir / "sales").glob("current*")))
+
+    assert Path(str(first["staged_path"])).name == "current.xlsx"
+    assert staged_files == (Path(str(second["staged_path"])),)
+    assert staged_files[0].read_bytes() == b"second-version"
+    assert second["source_name"] == "march-sales.tsv"
+    assert second["size_bytes"] == len(b"second-version")
+
+
+def test_replace_upload_staging_refreshes_registry_metadata(tmp_path: Path) -> None:
+    workspace = ensure_session_workspace("replace-stock-session", base_dir=tmp_path)
+    registry = ensure_upload_registry({"workspace_input_dir": str(workspace.input_dir)})
+
+    stage_uploaded_file(
+        FakeUpload("stock.csv", b"sku,qty\n1,2\n"),
+        slot_key="stock",
+        workspace_input_dir=workspace.input_dir,
+        registry=registry,
+    )
+    refreshed = stage_uploaded_file(
+        FakeUpload("stock-refresh.csv", b"sku,qty\n1,5\n"),
+        slot_key="stock",
+        workspace_input_dir=workspace.input_dir,
+        registry=registry,
+    )
+
+    assert registry["stock"]["current_file"] == refreshed
+    assert refreshed["source_name"] == "stock-refresh.csv"
+    assert Path(str(refreshed["staged_path"])).read_bytes() == b"sku,qty\n1,5\n"
+
+
+class FakeUpload:
+    def __init__(self, name: str, payload: bytes) -> None:
+        self.name = name
+        self._payload = payload
+
+    def getbuffer(self) -> memoryview:
+        return memoryview(self._payload)

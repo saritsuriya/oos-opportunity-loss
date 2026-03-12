@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, MutableMapping
+from uuid import uuid4
 
 UPLOAD_REGISTRY_KEY = "staged_input_registry"
 
@@ -16,6 +17,22 @@ class UploadSlot:
     directory_name: str
     accepted_extensions: tuple[str, ...]
     default_extension: str
+
+
+@dataclass(frozen=True)
+class StagedInputFile:
+    slot_key: str
+    source_name: str
+    size_bytes: int
+    staged_path: str
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "slot_key": self.slot_key,
+            "source_name": self.source_name,
+            "size_bytes": self.size_bytes,
+            "staged_path": self.staged_path,
+        }
 
 
 _UPLOAD_SLOTS: tuple[UploadSlot, ...] = (
@@ -111,7 +128,58 @@ def ensure_upload_registry(
     return registry
 
 
+def stage_uploaded_file(
+    uploaded_file: Any,
+    slot_key: str,
+    workspace_input_dir: str | Path,
+    registry: MutableMapping[str, dict[str, object]] | None = None,
+) -> dict[str, object]:
+    source_name = _get_uploaded_file_name(uploaded_file)
+    payload = _read_uploaded_bytes(uploaded_file)
+    staged_path = build_staged_upload_path(workspace_input_dir, slot_key, source_name)
+    slot_dir = staged_path.parent
+    temp_path = slot_dir / f".incoming-{uuid4().hex}{staged_path.suffix}"
+
+    temp_path.write_bytes(payload)
+    for existing_path in slot_dir.glob("current*"):
+        if existing_path != temp_path and existing_path.is_file():
+            existing_path.unlink()
+    temp_path.replace(staged_path)
+
+    metadata = StagedInputFile(
+        slot_key=slot_key,
+        source_name=source_name,
+        size_bytes=len(payload),
+        staged_path=str(staged_path),
+    ).as_dict()
+    if registry is not None:
+        registry[slot_key]["current_file"] = metadata
+    return metadata
+
+
 def _resolve_workspace_input_dir(workspace_input_dir: str | Path) -> Path:
     workspace_root = Path(workspace_input_dir).expanduser().resolve()
     workspace_root.mkdir(parents=True, exist_ok=True)
     return workspace_root
+
+
+def _get_uploaded_file_name(uploaded_file: Any) -> str:
+    source_name = getattr(uploaded_file, "name", "")
+    if not source_name:
+        msg = "uploaded_file must expose a source filename via .name"
+        raise TypeError(msg)
+    return str(source_name)
+
+
+def _read_uploaded_bytes(uploaded_file: Any) -> bytes:
+    if hasattr(uploaded_file, "getbuffer"):
+        return bytes(uploaded_file.getbuffer())
+    if hasattr(uploaded_file, "getvalue"):
+        return bytes(uploaded_file.getvalue())
+    if hasattr(uploaded_file, "read"):
+        payload = uploaded_file.read()
+        if hasattr(uploaded_file, "seek"):
+            uploaded_file.seek(0)
+        return bytes(payload)
+    msg = "uploaded_file must provide getbuffer(), getvalue(), or read()"
+    raise TypeError(msg)
