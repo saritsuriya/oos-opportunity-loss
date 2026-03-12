@@ -17,6 +17,7 @@ CONFIG_PATH = ROOT / ".streamlit" / "config.toml"
 RUN_SCRIPT_PATH = ROOT / "scripts" / "run_streamlit.ps1"
 CLEANUP_SCRIPT_PATH = ROOT / "scripts" / "cleanup_temp_workspace.py"
 CLEANUP_WRAPPER_PATH = ROOT / "scripts" / "cleanup_temp_workspace.ps1"
+RUNBOOK_PATH = ROOT / "docs" / "phase-01-deployment.md"
 
 
 def load_streamlit_deploy_config() -> dict[str, object]:
@@ -93,6 +94,17 @@ def test_windows_scripts_target_real_project_artifacts() -> None:
     assert "get_workspace_base_dir" in cleanup_script
     assert "scripts\\cleanup_temp_workspace.py" in cleanup_wrapper
     assert "--max-age-hours" in cleanup_wrapper
+
+
+def test_runbook_describes_phase_1_windows_deployment_baseline() -> None:
+    runbook = RUNBOOK_PATH.read_text(encoding="utf-8")
+
+    assert "scripts/run_streamlit.ps1" in runbook
+    assert "scripts/cleanup_temp_workspace.ps1" in runbook
+    assert "http://<public-hostname>:8501/" in runbook
+    assert "Site mapping.csv" in runbook
+    assert "stateless" in runbook
+    assert "No login or expanded authentication" in runbook
 
 
 def _set_tree_mtime(root: Path, timestamp: float) -> None:
