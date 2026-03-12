@@ -7,7 +7,7 @@ This roadmap now starts with a stateless MVP. The first goal is not to solve lon
 ## Phases
 
 - [x] **Phase 1: Workspace Foundation** - Create the internal web app shell and temporary run workspace
-- [ ] **Phase 2: Run Input Workflow** - Build per-run file upload and validation for required inputs
+- [x] **Phase 2: Run Input Workflow** - Build per-run file upload and validation for required inputs
 - [ ] **Phase 3: V5 Calculation Runs** - Extract and run the frozen V5 logic from uploaded files
 - [ ] **Phase 4: Results Workspace** - Deliver QA review and export workflow in the web UI
 - [ ] **Phase 5: Persistence Enhancements** - Add stored history, duplicate protection, and reusable dataset management after MVP
@@ -42,8 +42,8 @@ Plans:
 
 Plans:
 - [x] 02-01: Build upload endpoints and temporary file models for run inputs
-- [ ] 02-02: Implement schema validation and ingestion warnings
-- [ ] 02-03: Build upload UI for sales, stock, and SKU files plus bundled site-mapping visibility
+- [x] 02-02: Implement schema validation and ingestion warnings
+- [x] 02-03: Build upload UI for sales, stock, and SKU files plus bundled site-mapping visibility
 
 ### Phase 3: V5 Calculation Runs
 **Goal**: The frozen V5 logic runs from uploaded files inside the web workflow and returns a completed run result.
@@ -99,7 +99,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Workspace Foundation | 3/3 | Complete    | 2026-03-12 |
-| 2. Run Input Workflow | 1/3 | In Progress | - |
+| 2. Run Input Workflow | 3/3 | Complete | 2026-03-12 |
 | 3. V5 Calculation Runs | 0/3 | Not started | - |
 | 4. Results Workspace | 0/3 | Not started | - |
 | 5. Persistence Enhancements | 0/3 | Deferred | - |

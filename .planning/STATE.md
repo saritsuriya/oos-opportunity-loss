@@ -4,17 +4,17 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 2
 current_phase_name: Run Input Workflow
-current_plan: 1
+current_plan: 3
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-12T09:27:04.644Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-03-12T09:49:55Z"
 last_activity: 2026-03-12
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 4
-  percent: 67
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -24,48 +24,50 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-11)
 
 **Core value:** Make monthly opportunity-loss calculation easier to operate from the browser without changing the current V5 business logic.
-**Current focus:** Phase 2 execution after completing Plan 02-01 for session upload staging
+**Current focus:** Phase 3 handoff after completing the Phase 2 upload workflow and readiness UI.
 
 ## Current Position
 
 **Current Phase:** 2
 **Current Phase Name:** Run Input Workflow
 **Total Phases:** 5
-**Current Plan:** 1
+**Current Plan:** 3
 **Total Plans in Phase:** 3
-**Status:** Ready to execute
+**Status:** Phase 2 complete
 **Last Activity:** 2026-03-12
-**Last Activity Description:** Completed Plan 02-01 for the session-local upload staging contract
-**Progress:** [███████░░░] 67%
+**Last Activity Description:** Completed Plan 02-03 for the upload-step UI, bundled site-mapping visibility, and readiness gating
+**Progress:** [██████████] 100%
 
 Phase: 2 of 5 (Run Input Workflow)
-Plan: 1 of 3 in current phase
-Status: Ready to execute
-Last activity: 2026-03-12 — Completed Plan 02-01 for the session-local upload staging contract
+Plan: 3 of 3 in current phase
+Status: Phase 2 complete
+Last activity: 2026-03-12 — Completed Plan 02-03 for the upload-step UI, bundled site-mapping visibility, and readiness gating
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 6
 - Average duration: 7 min
-- Total execution time: 0.5 hours
+- Total execution time: 0.7 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 3 | 21 min | 7 min |
-| 02 | 1 | 6 min | 6 min |
+| 02 | 3 | 20 min | 6.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (8 min), 01-02 (3 min), 01-03 (10 min), 02-01 (6 min)
-- Trend: Phase 2 staging work stayed inside the expected fast unit-test feedback loop.
+- Last 5 plans: 01-02 (3 min), 01-03 (10 min), 02-01 (6 min), 02-02 (3 min), 02-03 (11 min)
+- Trend: Phase 2 stayed inside a fast feedback loop while expanding from services into the browser upload workflow.
 
 **Recent plan metrics:**
 - Phase 01 P01 | 8 min | 3 tasks | 11 files
 - Phase 01 P02 | 3 min | 3 tasks | 4 files
 - Phase 01 P03 | 10 min | 3 tasks | 6 files
 - Phase 02 P01 | 6 min | 3 tasks | 3 files
+- Phase 02 P02 | 3 min | 3 tasks | 2 files
+- Phase 02 P03 | 11 min | 3 tasks | 4 files
 
 ## Accumulated Context
 
@@ -88,6 +90,11 @@ Recent decisions affecting current work:
 - [Phase 01-workspace-foundation]: Leave the final public host name and port as startup parameters instead of baking environment-specific values into repo config.
 - [Phase 02]: Keep one slot directory per required upload inside workspace_input_dir so the wizard and later validators use the same run-local source of truth. — Stable per-slot paths let UI, validation, and later execution reuse one session-local staging contract.
 - [Phase 02]: Preserve uploaded suffixes in canonical current{suffix} filenames so downstream loaders keep format hints without storing session history. — Same-slot replacement stays deterministic while later validation can still distinguish Excel, CSV, and text-based inputs.
+- [Phase 02]: Reused staged upload metadata from Plan 02-01 as the validator input contract.
+- [Phase 02]: Kept empty, near-empty, and mixed-month findings as warnings instead of blockers in Phase 2.
+- [Phase 02]: Limited upload summaries to row counts and date/month hints instead of preview tables or business QA.
+- [Phase 02]: Kept the upload step inside the existing wizard shell and gated navigation from a shared readiness payload.
+- [Phase 02]: Sourced bundled site-mapping visibility from the V5 boundary so Phase 2 and Phase 3 share one mapping contract.
 
 ### Pending Todos
 
@@ -99,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T09:27:04.599Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-12T09:48:33.317Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
