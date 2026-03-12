@@ -2,16 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready for next phase
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-12T09:21:35.932Z"
-last_activity: 2026-03-12 — Completed Plan 01-03 for the Streamlit workspace foundation
+current_phase: 2
+current_phase_name: Run Input Workflow
+current_plan: 1
+status: executing
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-12T09:27:04.644Z"
+last_activity: 2026-03-12
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 6
   completed_plans: 4
-  percent: 100
+  percent: 67
 ---
 
 # Project State
@@ -21,38 +24,48 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-11)
 
 **Core value:** Make monthly opportunity-loss calculation easier to operate from the browser without changing the current V5 business logic.
-**Current focus:** Phase 2 planning after completing the Phase 1 Windows deployment baseline
+**Current focus:** Phase 2 execution after completing Plan 02-01 for session upload staging
 
 ## Current Position
 
-Phase: 2 of 5 (Run Input Workflow)
-Plan: 0 of 3 in current phase
-Status: Ready for next phase
-Last activity: 2026-03-12 — Completed Plan 01-03 for the Streamlit workspace foundation
+**Current Phase:** 2
+**Current Phase Name:** Run Input Workflow
+**Total Phases:** 5
+**Current Plan:** 1
+**Total Plans in Phase:** 3
+**Status:** Ready to execute
+**Last Activity:** 2026-03-12
+**Last Activity Description:** Completed Plan 02-01 for the session-local upload staging contract
+**Progress:** [███████░░░] 67%
 
-Progress: [██████████] 100%
+Phase: 2 of 5 (Run Input Workflow)
+Plan: 1 of 3 in current phase
+Status: Ready to execute
+Last activity: 2026-03-12 — Completed Plan 02-01 for the session-local upload staging contract
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 7 min
-- Total execution time: 0.4 hours
+- Total execution time: 0.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 3 | 21 min | 7 min |
+| 02 | 1 | 6 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (8 min), 01-02 (3 min), 01-03 (10 min)
-- Trend: Deployment baseline added expected script and documentation overhead at the end of Phase 1
+- Last 5 plans: 01-01 (8 min), 01-02 (3 min), 01-03 (10 min), 02-01 (6 min)
+- Trend: Phase 2 staging work stayed inside the expected fast unit-test feedback loop.
 
 **Recent plan metrics:**
 - Phase 01 P01 | 8 min | 3 tasks | 11 files
 - Phase 01 P02 | 3 min | 3 tasks | 4 files
 - Phase 01 P03 | 10 min | 3 tasks | 6 files
+- Phase 02 P01 | 6 min | 3 tasks | 3 files
 
 ## Accumulated Context
 
@@ -73,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 01-workspace-foundation]: Keep the startup script foreground-oriented so Windows service or scheduled-task wrappers can own the Streamlit process.
 - [Phase 01-workspace-foundation]: Reuse the Phase 1 runtime cleanup helpers through a thin CLI wrapper instead of duplicating stale-workspace logic.
 - [Phase 01-workspace-foundation]: Leave the final public host name and port as startup parameters instead of baking environment-specific values into repo config.
+- [Phase 02]: Keep one slot directory per required upload inside workspace_input_dir so the wizard and later validators use the same run-local source of truth. — Stable per-slot paths let UI, validation, and later execution reuse one session-local staging contract.
+- [Phase 02]: Preserve uploaded suffixes in canonical current{suffix} filenames so downstream loaders keep format hints without storing session history. — Same-slot replacement stays deterministic while later validation can still distinguish Excel, CSV, and text-based inputs.
 
 ### Pending Todos
 
@@ -84,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T09:21:35.923Z
-Stopped at: Phase 2 context gathered
+Last session: 2026-03-12T09:27:04.599Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None

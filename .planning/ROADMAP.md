@@ -41,7 +41,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Build upload endpoints and temporary file models for run inputs
+- [x] 02-01: Build upload endpoints and temporary file models for run inputs
 - [ ] 02-02: Implement schema validation and ingestion warnings
 - [ ] 02-03: Build upload UI for sales, stock, and SKU files plus bundled site-mapping visibility
 
@@ -99,7 +99,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Workspace Foundation | 3/3 | Complete    | 2026-03-12 |
-| 2. Run Input Workflow | 0/3 | Not started | - |
+| 2. Run Input Workflow | 1/3 | In Progress | - |
 | 3. V5 Calculation Runs | 0/3 | Not started | - |
 | 4. Results Workspace | 0/3 | Not started | - |
 | 5. Persistence Enhancements | 0/3 | Deferred | - |
