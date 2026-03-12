@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
@@ -10,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from streamlit_app.runtime.cleanup import cleanup_session_workspace, cleanup_stale_workspaces
 from streamlit_app.runtime.temp_workspace import ensure_session_workspace
 
 
@@ -56,3 +59,39 @@ def test_create_bootstrap_session_state_exposes_workspace_paths(
     assert workspace_root.parent == tmp_path
     assert input_dir.parent == workspace_root
     assert output_dir.parent == workspace_root
+
+
+def test_cleanup_session_workspace_removes_session_tree(tmp_path: Path) -> None:
+    workspace = ensure_session_workspace("cleanup-now", base_dir=tmp_path)
+    (workspace.output_dir / "artifact.txt").write_text("temporary", encoding="utf-8")
+
+    removed = cleanup_session_workspace("cleanup-now", base_dir=tmp_path)
+
+    assert removed is True
+    assert not workspace.root.exists()
+
+
+def test_cleanup_stale_workspaces_removes_only_expired_roots(tmp_path: Path) -> None:
+    stale_workspace = ensure_session_workspace("stale-run", base_dir=tmp_path)
+    fresh_workspace = ensure_session_workspace("fresh-run", base_dir=tmp_path)
+
+    stale_timestamp = datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc).timestamp()
+    fresh_timestamp = datetime(2026, 3, 12, 11, 45, tzinfo=timezone.utc).timestamp()
+    _set_tree_mtime(stale_workspace.root, stale_timestamp)
+    _set_tree_mtime(fresh_workspace.root, fresh_timestamp)
+
+    removed = cleanup_stale_workspaces(
+        timedelta(hours=6),
+        base_dir=tmp_path,
+        now=datetime(2026, 3, 12, 12, 0, tzinfo=timezone.utc),
+    )
+
+    assert removed == (stale_workspace.root,)
+    assert not stale_workspace.root.exists()
+    assert fresh_workspace.root.exists()
+
+
+def _set_tree_mtime(root: Path, timestamp: float) -> None:
+    for path in sorted(root.rglob("*"), reverse=True):
+        os.utime(path, (timestamp, timestamp))
+    os.utime(root, (timestamp, timestamp))

@@ -102,3 +102,16 @@ def ensure_session_workspace(session_id: str, base_dir: str | Path | None = None
         output_dir=output_dir,
         metadata_path=metadata_path,
     )
+
+
+def iter_session_workspace_roots(base_dir: str | Path | None = None) -> tuple[Path, ...]:
+    root = get_workspace_base_dir(base_dir)
+    return tuple(sorted(path for path in root.iterdir() if path.is_dir() and path.name.startswith("session-")))
+
+
+def latest_workspace_mtime(workspace_root: str | Path) -> float:
+    root = Path(workspace_root)
+    latest_mtime = root.stat().st_mtime
+    for child in root.rglob("*"):
+        latest_mtime = max(latest_mtime, child.stat().st_mtime)
+    return latest_mtime
