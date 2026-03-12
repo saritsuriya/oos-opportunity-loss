@@ -15,8 +15,8 @@
 - [x] **DATA-01**: User can upload a sales-performance file through the web UI for a run
 - [x] **DATA-02**: User can upload a stock snapshot file for a selected calculation month
 - [x] **DATA-03**: User can upload a SKU universe / live-product file for a run
-- [ ] **DATA-04**: System applies a bundled site-mapping configuration for the calculation in MVP
-- [ ] **DATA-05**: System validates required columns, file type, and parse errors before accepting uploaded run inputs
+- [x] **DATA-04**: System applies a bundled site-mapping configuration for the calculation in MVP
+- [x] **DATA-05**: System validates required columns, file type, and parse errors before accepting uploaded run inputs
 
 ### Calculation Runs
 
@@ -80,8 +80,8 @@
 | DATA-01 | Phase 2 | Complete |
 | DATA-02 | Phase 2 | Complete |
 | DATA-03 | Phase 2 | Complete |
-| DATA-04 | Phase 2 | Pending |
-| DATA-05 | Phase 2 | Pending |
+| DATA-04 | Phase 2 | Complete |
+| DATA-05 | Phase 2 | Complete |
 | RUN-01 | Phase 3 | Pending |
 | RUN-02 | Phase 3 | Pending |
 | RUN-03 | Phase 3 | Pending |
@@ -104,4 +104,4 @@
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-12 after completing Phase 2 Plan 01 upload staging*
+*Last updated: 2026-03-12 after completing Phase 2 run input workflow*
