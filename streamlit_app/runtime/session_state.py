@@ -10,8 +10,10 @@ import streamlit as st
 
 try:
     from streamlit_app.runtime.temp_workspace import ensure_session_workspace
+    from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY, ensure_upload_registry
 except ModuleNotFoundError:
     from runtime.temp_workspace import ensure_session_workspace
+    from services.upload_staging import UPLOAD_REGISTRY_KEY, ensure_upload_registry
 
 
 @dataclass(frozen=True)
@@ -75,7 +77,9 @@ def bootstrap_session_state() -> dict[str, object]:
     for key, value in workspace_state.items():
         st.session_state[key] = value
 
-    state_keys = [*defaults.keys(), *workspace_state.keys()]
+    ensure_upload_registry(st.session_state)
+
+    state_keys = [*defaults.keys(), *workspace_state.keys(), UPLOAD_REGISTRY_KEY]
     return {key: st.session_state[key] for key in state_keys}
 
 
