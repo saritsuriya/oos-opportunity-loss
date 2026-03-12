@@ -15,6 +15,39 @@ from streamlit_app.services.input_validation import validate_staged_input
 from streamlit_app.services.upload_staging import StagedInputFile
 
 
+def write_valid_sales_excel(path: Path) -> None:
+    pd.DataFrame(
+        {
+            "Purchase Date": ["2026-02-01", "2026-02-28"],
+            "Sku": ["SKU-1", "SKU-2"],
+            "stock": ["bkk-out", "dmk-out"],
+            "Quantity": [2, 4],
+            "Gross": [100, 200],
+            "Net": [90, 180],
+            "Product Name": ["Bag", "Watch"],
+        }
+    ).to_excel(path, index=False)
+
+
+def write_empty_stock_csv(path: Path) -> None:
+    pd.DataFrame(columns=["posting_date", "site_code", "article_code", "stock_balance"]).to_csv(path, index=False)
+
+
+def write_multi_month_stock_csv(path: Path) -> None:
+    pd.DataFrame(
+        {
+            "posting_date": ["2026-02-01", "2026-03-01"],
+            "site_code": ["BKK", "BKK"],
+            "article_code": ["SKU-1", "SKU-2"],
+            "stock_balance": [5, 7],
+        }
+    ).to_csv(path, index=False)
+
+
+def write_near_empty_sku_csv(path: Path) -> None:
+    pd.DataFrame({"skuNo": ["SKU-1"], "productName": ["Bag"], "status": ["Live"]}).to_csv(path, index=False)
+
+
 def write_sales_missing_columns(path: Path) -> None:
     pd.DataFrame(
         {
@@ -97,6 +130,77 @@ def test_critical_rejects_missing_required_columns_for_each_slot(
 
     assert result.is_valid is False
     assert [issue.code for issue in result.errors] == ["missing_required_columns"]
+
+
+def test_warnings_include_sales_summary_month_hints(tmp_path: Path) -> None:
+    metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="sales",
+        filename="sales.xlsx",
+        writer=write_valid_sales_excel,
+    )
+
+    result = validate_staged_input(metadata)
+
+    assert result.is_valid is True
+    assert result.warnings == ()
+    assert result.summary.row_count == 2
+    assert result.summary.date_field == "Purchase Date"
+    assert result.summary.min_date == "2026-02-01"
+    assert result.summary.max_date == "2026-02-28"
+    assert result.summary.month_hints == ("2026-02",)
+
+
+def test_warnings_include_empty_dataset_warning_for_stock(tmp_path: Path) -> None:
+    metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="stock",
+        filename="stock.csv",
+        writer=write_empty_stock_csv,
+    )
+
+    result = validate_staged_input(metadata)
+
+    assert result.is_valid is True
+    assert [issue.code for issue in result.warnings] == ["empty_dataset"]
+    assert result.summary.row_count == 0
+    assert result.summary.date_field == "posting_date"
+    assert result.summary.month_hints == ()
+
+
+def test_warnings_include_multiple_month_hint_warning_for_stock(tmp_path: Path) -> None:
+    metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="stock",
+        filename="stock.csv",
+        writer=write_multi_month_stock_csv,
+    )
+
+    result = validate_staged_input(metadata)
+
+    assert result.is_valid is True
+    assert [issue.code for issue in result.warnings] == ["multiple_month_hints"]
+    assert result.summary.row_count == 2
+    assert result.summary.min_date == "2026-02-01"
+    assert result.summary.max_date == "2026-03-01"
+    assert result.summary.month_hints == ("2026-02", "2026-03")
+
+
+def test_warnings_include_near_empty_warning_for_sku_live(tmp_path: Path) -> None:
+    metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="sku_live",
+        filename="sku-live.csv",
+        writer=write_near_empty_sku_csv,
+    )
+
+    result = validate_staged_input(metadata)
+
+    assert result.is_valid is True
+    assert [issue.code for issue in result.warnings] == ["near_empty_dataset"]
+    assert result.summary.row_count == 1
+    assert result.summary.date_field is None
+    assert result.summary.month_hints == ()
 
 
 def write_tabular_metadata(

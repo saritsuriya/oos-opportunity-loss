@@ -70,6 +70,10 @@ class InputValidationResult:
 class SlotValidationContract:
     required_columns: tuple[str, ...]
     read_frame: Callable[[Path], pd.DataFrame]
+    date_field: str | None = None
+
+
+NEAR_EMPTY_ROW_COUNT = 1
 
 
 _SLOT_CONTRACTS: dict[str, SlotValidationContract] = {
@@ -78,10 +82,12 @@ _SLOT_CONTRACTS: dict[str, SlotValidationContract] = {
         read_frame=lambda path: pd.read_excel(path)
         if path.suffix.lower() in {".xlsx", ".xlsm", ".xls"}
         else pd.read_csv(path, encoding="utf-16", sep="\t"),
+        date_field="Purchase Date",
     ),
     "stock": SlotValidationContract(
         required_columns=("posting_date", "site_code", "article_code", "stock_balance"),
         read_frame=pd.read_csv,
+        date_field="posting_date",
     ),
     "sku_live": SlotValidationContract(
         required_columns=("skuNo",),
@@ -157,10 +163,13 @@ def validate_staged_input(staged_file: Mapping[str, object]) -> InputValidationR
             message=f"Missing required columns: {', '.join(missing_columns)}",
         )
 
+    summary = _build_summary(slot_key, frame, contract)
     return InputValidationResult(
         slot_key=slot_key,
         source_name=source_name,
         staged_path=str(path),
+        warnings=_build_warnings(summary),
+        summary=summary,
     )
 
 
@@ -178,3 +187,65 @@ def _result_with_error(
         staged_path=staged_path,
         errors=(ValidationFinding(code=code, message=message),),
     )
+
+
+def _build_summary(
+    slot_key: str,
+    frame: pd.DataFrame,
+    contract: SlotValidationContract,
+) -> ValidationSummary:
+    row_count = int(len(frame.index))
+    date_field = contract.date_field
+    if not date_field:
+        return ValidationSummary(row_count=row_count)
+
+    parsed_dates = _parse_date_field(slot_key, frame[date_field]) if date_field in frame.columns else pd.Series()
+    parsed_dates = parsed_dates.dropna()
+    if parsed_dates.empty:
+        return ValidationSummary(row_count=row_count, date_field=date_field)
+
+    normalized = pd.to_datetime(parsed_dates, errors="coerce").dropna().dt.normalize()
+    month_hints = tuple(sorted(set(normalized.dt.strftime("%Y-%m"))))
+    return ValidationSummary(
+        row_count=row_count,
+        date_field=date_field,
+        min_date=normalized.min().date().isoformat(),
+        max_date=normalized.max().date().isoformat(),
+        month_hints=month_hints,
+    )
+
+
+def _build_warnings(summary: ValidationSummary) -> tuple[ValidationFinding, ...]:
+    warnings: list[ValidationFinding] = []
+    if summary.row_count == 0:
+        warnings.append(
+            ValidationFinding(
+                code="empty_dataset",
+                message="The file parsed successfully but contains no data rows.",
+            )
+        )
+    elif summary.row_count is not None and summary.row_count <= NEAR_EMPTY_ROW_COUNT:
+        warnings.append(
+            ValidationFinding(
+                code="near_empty_dataset",
+                message="The file parsed successfully but contains very few rows.",
+            )
+        )
+
+    if len(summary.month_hints) > 1:
+        warnings.append(
+            ValidationFinding(
+                code="multiple_month_hints",
+                message="Detected data from multiple months in the uploaded file.",
+            )
+        )
+    return tuple(warnings)
+
+
+def _parse_date_field(slot_key: str, series: pd.Series) -> pd.Series:
+    raw = series.astype(str)
+    if slot_key == "sales":
+        first_pass = pd.to_datetime(raw, errors="coerce", dayfirst=False)
+        second_pass = pd.to_datetime(raw, errors="coerce", dayfirst=True)
+        return second_pass if second_pass.notna().sum() > first_pass.notna().sum() else first_pass
+    return pd.to_datetime(raw, errors="coerce")
