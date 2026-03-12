@@ -3,7 +3,7 @@ phase: 1
 slug: workspace-foundation
 status: draft
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-03-12
 ---
 
@@ -38,9 +38,15 @@ created: 2026-03-12
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 01-01-01 | 01-01 | 1 | OPS-01 | smoke | `pytest -q tests/test_app_smoke.py` | ❌ W0 | ⬜ pending |
-| 01-02-01 | 01-02 | 1 | OPS-02 | unit | `pytest -q tests/test_temp_workspace.py` | ❌ W0 | ⬜ pending |
-| 01-03-01 | 01-03 | 2 | OPS-01 | smoke | `pytest -q tests/test_deploy_config.py` | ❌ W0 | ⬜ pending |
+| 01-01-01 | 01-01 | 1 | OPS-01 | build | `python3 -m compileall streamlit_app` | ✅ | ⬜ pending |
+| 01-01-02 | 01-01 | 1 | OPS-01 | build | `python3 -m compileall streamlit_app` | ✅ | ⬜ pending |
+| 01-01-03 | 01-01 | 1 | OPS-01 | smoke | `pytest -q tests/test_app_smoke.py` | ✅ | ⬜ pending |
+| 01-02-01 | 01-02 | 2 | OPS-02 | unit | `pytest -q tests/test_temp_workspace.py -k create` | ✅ | ⬜ pending |
+| 01-02-02 | 01-02 | 2 | OPS-02 | unit | `pytest -q tests/test_temp_workspace.py -k cleanup` | ✅ | ⬜ pending |
+| 01-02-03 | 01-02 | 2 | OPS-02 | unit | `pytest -q tests/test_temp_workspace.py` | ✅ | ⬜ pending |
+| 01-03-01 | 01-03 | 3 | OPS-01 | smoke | `pytest -q tests/test_deploy_config.py -k config` | ✅ | ⬜ pending |
+| 01-03-02 | 01-03 | 3 | OPS-01 | smoke | `pytest -q tests/test_deploy_config.py -k scripts` | ✅ | ⬜ pending |
+| 01-03-03 | 01-03 | 3 | OPS-01 | smoke | `pytest -q tests/test_deploy_config.py` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,10 +54,7 @@ created: 2026-03-12
 
 ## Wave 0 Requirements
 
-- [ ] `requirements.txt` or `pyproject.toml` — declare Streamlit, pytest, and test dependencies
-- [ ] `tests/test_app_smoke.py` — Streamlit AppTest smoke coverage for app boot
-- [ ] `tests/test_temp_workspace.py` — unit coverage for session temp workspace helpers
-- [ ] `tests/test_deploy_config.py` — smoke coverage for deployment/config bootstrap helpers
+Existing infrastructure covers all phase requirements. Automated verification is created inside the implementation tasks, so no separate Wave 0 bootstrap plan is required.
 
 ---
 
