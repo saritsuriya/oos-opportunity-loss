@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
 
 from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY, stage_uploaded_file
 from streamlit_app.services.v5_boundary import get_bundled_site_mapping_status
+from streamlit_app.ui.upload_inputs import UPLOAD_STEP_READINESS_KEY
 
 
 def test_upload_step_layout_renders_three_required_cards(tmp_path: Path, monkeypatch) -> None:
@@ -24,7 +25,10 @@ def test_upload_step_layout_renders_three_required_cards(tmp_path: Path, monkeyp
     app.run()
 
     assert len(app.exception) == 0
-    assert [node.value for node in app.subheader[-3:]] == ["Sales", "Stock", "SKU / Live"]
+    subheaders = [node.value for node in app.subheader]
+    assert "Sales" in subheaders
+    assert "Stock" in subheaders
+    assert "SKU / Live" in subheaders
 
     uploaders = app.get("file_uploader")
     assert len(uploaders) == 3
@@ -51,35 +55,12 @@ def test_upload_step_site_map_panel_shows_bundled_status_and_summaries(
 
     app = AppTest.from_file(str(ROOT / "streamlit_app" / "app.py"))
     app.run()
-
-    registry = {
-        slot_key: dict(slot_state)
-        for slot_key, slot_state in app.session_state[UPLOAD_REGISTRY_KEY].items()
-    }
-    workspace_input_dir = Path(app.session_state["workspace_input_dir"])
-
-    stage_uploaded_file(
-        FakeUpload("sales.txt", _sales_bytes_with_multiple_months()),
-        slot_key="sales",
-        workspace_input_dir=workspace_input_dir,
-        registry=registry,
+    _seed_registry(
+        app,
+        sales_payload=_sales_bytes_with_multiple_months(),
+        stock_payload=_stock_csv_bytes(),
+        sku_payload=_sku_csv_bytes(),
     )
-    stage_uploaded_file(
-        FakeUpload("stock.csv", _stock_csv_bytes()),
-        slot_key="stock",
-        workspace_input_dir=workspace_input_dir,
-        registry=registry,
-    )
-    stage_uploaded_file(
-        FakeUpload("sku-live.csv", _sku_csv_bytes()),
-        slot_key="sku_live",
-        workspace_input_dir=workspace_input_dir,
-        registry=registry,
-    )
-
-    app.session_state[UPLOAD_REGISTRY_KEY] = registry
-    app.session_state["current_step_index"] = 1
-    app.run()
 
     site_map_status = get_bundled_site_mapping_status()
 
@@ -92,7 +73,45 @@ def test_upload_step_site_map_panel_shows_bundled_status_and_summaries(
     assert any("Date coverage:** 2026-01-05 to 2026-02-03" in node.value for node in app.markdown)
     assert any("Month hints:** 2026-01, 2026-02" in node.value for node in app.markdown)
     assert any("Detected data from multiple months in the uploaded file." == node.value for node in app.warning)
+    readiness = app.session_state[UPLOAD_STEP_READINESS_KEY]
+    assert readiness["is_ready"] is True
+    assert readiness["ready_slots"] == 3
+    assert readiness["warning_count"] == 1
     assert app.button[1].disabled is False
+
+
+def test_upload_step_blocks_progress_for_validation_errors(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("OOS_WORKSPACE_BASE_DIR", str(tmp_path))
+
+    app = AppTest.from_file(str(ROOT / "streamlit_app" / "app.py"))
+    app.run()
+    _seed_registry(
+        app,
+        sales_payload=_sales_bytes_single_month(),
+        stock_payload=_invalid_stock_csv_bytes(),
+        sku_payload=_sku_csv_bytes(),
+    )
+
+    readiness = app.session_state[UPLOAD_STEP_READINESS_KEY]
+
+    assert len(app.exception) == 0
+    assert readiness["is_ready"] is False
+    assert readiness["ready_slots"] == 2
+    assert readiness["warning_count"] == 0
+    assert any(
+        "Missing required columns: article_code, stock_balance" in message
+        for message in readiness["blocking_messages"]
+    )
+    assert any(
+        "Resolve these blocking items before continuing:" in node.value for node in app.error
+    )
+    assert any("Blocking validation issues found:" in node.value for node in app.error)
+    assert any(
+        "Missing required columns: article_code, stock_balance" in node.value for node in app.markdown
+    )
+    assert app.metric[4].value == "2/3"
+    assert app.metric[5].value == "1"
+    assert app.button[1].disabled is True
 
 
 class FakeUpload:
@@ -131,6 +150,33 @@ def _sales_bytes_with_multiple_months() -> bytes:
     return buffer.getvalue()
 
 
+def _sales_bytes_single_month() -> bytes:
+    buffer = BytesIO()
+    pd.DataFrame(
+        [
+            {
+                "Purchase Date": "2026-01-05",
+                "Sku": "SKU-1",
+                "stock": "BKK",
+                "Quantity": 1,
+                "Gross": 100,
+                "Net": 90,
+                "Product Name": "Alpha",
+            },
+            {
+                "Purchase Date": "2026-01-08",
+                "Sku": "SKU-2",
+                "stock": "BKK",
+                "Quantity": 3,
+                "Gross": 130,
+                "Net": 125,
+                "Product Name": "Beta",
+            },
+        ]
+    ).to_csv(buffer, sep="\t", index=False, encoding="utf-16")
+    return buffer.getvalue()
+
+
 def _stock_csv_bytes() -> bytes:
     return pd.DataFrame(
         [
@@ -150,7 +196,50 @@ def _stock_csv_bytes() -> bytes:
     ).to_csv(index=False).encode("utf-8")
 
 
+def _invalid_stock_csv_bytes() -> bytes:
+    return pd.DataFrame(
+        [{"posting_date": "2026-01-05", "site_code": "26GA"}]
+    ).to_csv(index=False).encode("utf-8")
+
+
 def _sku_csv_bytes() -> bytes:
     return pd.DataFrame([{"skuNo": "SKU-1"}, {"skuNo": "SKU-2"}]).to_csv(index=False).encode(
         "utf-8"
     )
+
+
+def _seed_registry(
+    app: AppTest,
+    *,
+    sales_payload: bytes,
+    stock_payload: bytes,
+    sku_payload: bytes,
+) -> None:
+    registry = {
+        slot_key: dict(slot_state)
+        for slot_key, slot_state in app.session_state[UPLOAD_REGISTRY_KEY].items()
+    }
+    workspace_input_dir = Path(app.session_state["workspace_input_dir"])
+
+    stage_uploaded_file(
+        FakeUpload("sales.txt", sales_payload),
+        slot_key="sales",
+        workspace_input_dir=workspace_input_dir,
+        registry=registry,
+    )
+    stage_uploaded_file(
+        FakeUpload("stock.csv", stock_payload),
+        slot_key="stock",
+        workspace_input_dir=workspace_input_dir,
+        registry=registry,
+    )
+    stage_uploaded_file(
+        FakeUpload("sku-live.csv", sku_payload),
+        slot_key="sku_live",
+        workspace_input_dir=workspace_input_dir,
+        registry=registry,
+    )
+
+    app.session_state[UPLOAD_REGISTRY_KEY] = registry
+    app.session_state["current_step_index"] = 1
+    app.run()
