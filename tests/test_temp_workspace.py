@@ -6,6 +6,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
 from streamlit.testing.v1 import AppTest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,7 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from streamlit_app.runtime.cleanup import cleanup_session_workspace, cleanup_stale_workspaces
-from streamlit_app.runtime.temp_workspace import ensure_session_workspace
+from streamlit_app.runtime.temp_workspace import ensure_session_workspace, sanitize_session_id
 
 
 def test_create_session_workspace_builds_isolated_paths(tmp_path: Path) -> None:
@@ -89,6 +90,45 @@ def test_cleanup_stale_workspaces_removes_only_expired_roots(tmp_path: Path) -> 
     assert removed == (stale_workspace.root,)
     assert not stale_workspace.root.exists()
     assert fresh_workspace.root.exists()
+
+
+def test_workspace_contract_separates_inputs_from_outputs(tmp_path: Path) -> None:
+    workspace = ensure_session_workspace("contract-run", base_dir=tmp_path)
+    staged_input = workspace.input_dir / "orders.csv"
+    generated_output = workspace.output_dir / "summary.csv"
+
+    staged_input.write_text("input", encoding="utf-8")
+    generated_output.write_text("output", encoding="utf-8")
+
+    assert staged_input.parent != generated_output.parent
+    assert staged_input.relative_to(workspace.root).parts[0] == "inputs"
+    assert generated_output.relative_to(workspace.root).parts[0] == "outputs"
+    assert not staged_input.is_relative_to(workspace.output_dir)
+    assert not generated_output.is_relative_to(workspace.input_dir)
+
+
+def test_workspace_contract_keeps_cleanup_scoped_to_session_directories(tmp_path: Path) -> None:
+    stale_workspace = ensure_session_workspace("stale-scope", base_dir=tmp_path)
+    manual_folder = tmp_path / "manual-notes"
+    manual_folder.mkdir()
+
+    stale_timestamp = datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc).timestamp()
+    _set_tree_mtime(stale_workspace.root, stale_timestamp)
+    os.utime(manual_folder, (stale_timestamp, stale_timestamp))
+
+    removed = cleanup_stale_workspaces(
+        timedelta(hours=6),
+        base_dir=tmp_path,
+        now=datetime(2026, 3, 12, 12, 0, tzinfo=timezone.utc),
+    )
+
+    assert removed == (stale_workspace.root,)
+    assert manual_folder.exists()
+
+
+def test_workspace_contract_rejects_blank_session_ids() -> None:
+    with pytest.raises(ValueError):
+        sanitize_session_id("   ")
 
 
 def _set_tree_mtime(root: Path, timestamp: float) -> None:
