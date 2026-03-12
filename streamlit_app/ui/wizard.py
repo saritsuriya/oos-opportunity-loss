@@ -12,6 +12,7 @@ try:
         rewind_step,
         set_current_step,
     )
+    from streamlit_app.services.v5_boundary import get_boundary_overview
 except ModuleNotFoundError:
     from runtime.session_state import (
         advance_step,
@@ -20,6 +21,7 @@ except ModuleNotFoundError:
         rewind_step,
         set_current_step,
     )
+    from services.v5_boundary import get_boundary_overview
 
 
 def _render_shell_summary(step_index: int, total_steps: int) -> None:
@@ -48,17 +50,22 @@ def _render_step_map(step_index: int) -> None:
 
 
 def _render_boundary_summary() -> None:
+    overview = get_boundary_overview()
     st.subheader("MVP Boundary")
     st.markdown(
         "\n".join(
             [
-                "- Frozen V5 loader, analyzer, and reporter stay as the only calculation path.",
+                f"- Pipeline: {overview.pipeline_name}",
+                f"- Integration mode: {overview.integration_mode}",
+                f"- Bundled site mapping: `{overview.site_mapping_path}`",
                 "- Uploaded inputs and generated outputs remain scoped to the active session workspace.",
-                "- Site mapping stays bundled as system configuration in the MVP instead of a user upload.",
                 "- Persistence, duplicate detection, and stronger auth remain deferred beyond this phase.",
             ]
         )
     )
+    st.caption("Frozen V5 modules reserved behind the boundary:")
+    for module in overview.modules:
+        st.write(f"{module.import_path} - {module.responsibility}")
 
 
 def _render_current_step() -> None:
