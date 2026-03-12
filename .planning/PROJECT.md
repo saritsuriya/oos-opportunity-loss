@@ -18,17 +18,19 @@ Make monthly opportunity-loss calculation easier to operate from the browser wit
 
 ### Active
 
-- [ ] Internal ops users can upload the required source files through a web UI instead of running local scripts
+- [ ] Internal ops users can upload the required run files through a web UI instead of running local scripts
 - [ ] Users can run the frozen V5 logic from the browser for a selected month using run-scoped inputs
 - [ ] Users can review QA warnings and key explainability fields before trusting the result
 - [ ] Users can export result files in `.xlsx` and `.csv`
 - [ ] The app uses temporary run files only for the active job and does not yet persist business history across months
+- [ ] Site mapping is bundled as a system configuration in the MVP and is not uploaded by users per run
 
 ### Deferred
 
 - [ ] Persist sales history so future months only need delta uploads
 - [ ] Detect duplicate monthly sales uploads before they are appended to stored history
 - [ ] Store dataset lineage and reusable dataset versions across runs
+- [ ] Add admin-managed site-mapping maintenance outside the code bundle
 - [ ] Add dashboards and month-over-month reporting views
 
 ### Out of Scope
@@ -57,7 +59,8 @@ The existing repository is a brownfield analytics codebase with multiple script 
 | Use V5 as the canonical calculation model | Current team has frozen the logic and wants the product built on top of it | Accepted |
 | Build a stateless MVP first | Reduces implementation risk and avoids premature storage architecture decisions | Accepted |
 | Defer sales-history persistence and duplicate detection | Valuable later, but not required to prove the browser workflow | Accepted |
-| Keep all required datasets explicit per run in phase 1 | Makes the first release easier to reason about and easier to operate safely | Accepted |
+| Keep sales, stock, and SKU files explicit per run in phase 1 | Makes the first release easier to reason about and easier to operate safely | Accepted |
+| Bundle site mapping as MVP system config | Site mapping is small and stable enough to avoid adding upload/admin scope in the first release | Accepted |
 | Prioritize run workflow over dashboards in v1 | The first pain to solve is upload, calculate, QA, and export reliability | Accepted |
 
 ---

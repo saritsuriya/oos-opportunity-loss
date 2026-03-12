@@ -15,8 +15,8 @@
 - [ ] **DATA-01**: User can upload a sales-performance file through the web UI for a run
 - [ ] **DATA-02**: User can upload a stock snapshot file for a selected calculation month
 - [ ] **DATA-03**: User can upload a SKU universe / live-product file for a run
-- [ ] **DATA-04**: User can upload or choose the site-mapping file used by the calculation
-- [ ] **DATA-05**: System validates required columns, file type, and parse errors before accepting a run input
+- [ ] **DATA-04**: System applies a bundled site-mapping configuration for the calculation in MVP
+- [ ] **DATA-05**: System validates required columns, file type, and parse errors before accepting uploaded run inputs
 
 ### Calculation Runs
 
@@ -41,6 +41,10 @@
 - **HIST-03**: System detects duplicate sales uploads before they are committed
 - **HIST-04**: User can see what sales periods are already stored in history
 - **HIST-05**: System stores reusable dataset lineage and version history across runs
+
+### Configuration Management
+
+- **CFG-01**: Admin can update site-mapping configuration without editing bundled app files
 
 ### Reporting And Comparison
 
@@ -91,6 +95,7 @@
 | HIST-03 | Phase 5 | Deferred |
 | HIST-04 | Phase 5 | Deferred |
 | HIST-05 | Phase 5 | Deferred |
+| CFG-01 | Phase 5 | Deferred |
 
 **Coverage:**
 - v1 requirements: 15 total

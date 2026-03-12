@@ -34,15 +34,16 @@ Plans:
 **Depends on**: Phase 1
 **Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05
 **Success Criteria** (what must be TRUE):
-  1. User can upload each required file type from the web UI for a run
+  1. User can upload the required sales, stock, and SKU files from the web UI for a run
   2. Invalid files are rejected with clear validation feedback
-  3. Valid files are staged only for the active run and do not require persistent history
+  3. The run uses the bundled site-mapping configuration without requiring a user upload
+  4. Valid files are staged only for the active run and do not require persistent history
 **Plans**: 3 plans
 
 Plans:
 - [ ] 02-01: Build upload endpoints and temporary file models for run inputs
 - [ ] 02-02: Implement schema validation and ingestion warnings
-- [ ] 02-03: Build upload UI for sales, stock, SKU, and site-mapping files
+- [ ] 02-03: Build upload UI for sales, stock, and SKU files plus bundled site-mapping visibility
 
 ### Phase 3: V5 Calculation Runs
 **Goal**: The frozen V5 logic runs from uploaded files inside the web workflow and returns a completed run result.
@@ -82,12 +83,13 @@ Plans:
   1. Sales history persists across months instead of being re-uploaded every run
   2. Duplicate monthly sales uploads are detected before commit
   3. Users can see stored history coverage and reusable dataset lineage
+  4. Admins can maintain site-mapping configuration without editing bundled app files
 **Plans**: 3 plans
 
 Plans:
 - [ ] 05-01: Define persistent data model and business keys for stored history
 - [ ] 05-02: Implement append-only ingest and duplicate-detection logic
-- [ ] 05-03: Build stored-history and dataset-management UI
+- [ ] 05-03: Build stored-history, dataset-management, and site-mapping admin UI
 
 ## Progress
 

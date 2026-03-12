@@ -20,4 +20,5 @@ See: `.planning/PROJECT.md` (updated 2026-03-11)
 - Brownfield source of truth for calculation logic is `v5_daily_oos_opportunity/`
 - Product direction is an internal workflow-first web app
 - Current MVP direction is stateless: user uploads required files per run, runs V5, reviews QA, and exports results
+- MVP uses a bundled site-mapping configuration instead of a user-uploaded site-mapping file
 - Sales history persistence, duplicate detection, and reusable stored datasets have been intentionally moved to a later enhancement phase
