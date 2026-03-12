@@ -2,17 +2,20 @@
 
 import streamlit as st
 
+try:
+    from streamlit_app.runtime.session_state import bootstrap_session_state
+    from streamlit_app.ui.wizard import render_wizard_shell
+except ModuleNotFoundError:
+    from runtime.session_state import bootstrap_session_state
+    from ui.wizard import render_wizard_shell
+
 APP_TITLE = "OOS Opportunity Loss Workspace"
 
 
 def render_app() -> None:
-    st.set_page_config(page_title=APP_TITLE, layout="wide")
-    st.title(APP_TITLE)
-    st.caption("Phase 1 foundation for the frozen V5 operator workflow.")
-    st.info(
-        "Guided wizard navigation, session bootstrap, and the reusable V5 boundary "
-        "will be wired into this entrypoint in the next task."
-    )
+    st.set_page_config(page_title=APP_TITLE, layout="wide", initial_sidebar_state="collapsed")
+    bootstrap_session_state()
+    render_wizard_shell()
 
 
 def main() -> None:
