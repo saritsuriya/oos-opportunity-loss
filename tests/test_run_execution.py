@@ -160,6 +160,54 @@ def test_execute_frozen_v5_run_returns_structured_success_payload(
     assert payload["output_workbook"] == str(request.output_workbook)
 
 
+def test_execute_frozen_v5_run_returns_structured_failure_payload(
+    tmp_path: Path, monkeypatch
+) -> None:
+    workspace_root = tmp_path / "session-epsilon"
+    staged_registry = _build_staged_registry(
+        workspace_root,
+        sales_name="sales.tsv",
+        stock_dates=("2026-04-01", "2026-04-15"),
+        sku_name="sku-live.csv",
+    )
+    site_mapping_path = workspace_root / "bundled-site-map.csv"
+    site_mapping_path.write_text(
+        "Virtual Location,Site,Active\nwh-bkk,1001,X\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "streamlit_app.services.v5_boundary.locate_bundled_site_mapping",
+        lambda: site_mapping_path,
+    )
+
+    request = build_run_request(
+        workspace_root=workspace_root,
+        staged_upload_registry=staged_registry,
+        eval_year=2026,
+        eval_month=4,
+    )
+
+    result = execute_frozen_v5_run(
+        request,
+        symbols=_build_failure_symbols(RuntimeError("analysis failed")),
+    )
+
+    assert result.ok is False
+    assert result.status == "failed"
+    assert result.error_type == "RuntimeError"
+    assert result.error_message == "analysis failed"
+    assert result.detail_row_count == 0
+    assert result.qa_summary_row_count == 0
+    assert result.unmapped_site_count == 0
+    assert result.lost_value_net_raw == 0.0
+    assert result.artifacts.workbook == request.artifacts.workbook
+    payload = result.as_dict()
+    assert payload["status"] == "failed"
+    assert payload["error_type"] == "RuntimeError"
+    assert payload["output_dir"] == str(request.output_dir)
+
+
 def _build_staged_registry(
     workspace_root: Path,
     *,
@@ -328,3 +376,29 @@ def _build_success_symbols(captured: dict[str, object]) -> dict[str, object]:
         "DailyOOSOpportunityV5": DailyOOSOpportunityV5,
         "ReporterV5": ReporterV5,
     }
+
+
+def _build_failure_symbols(error: Exception) -> dict[str, object]:
+    symbols = _build_success_symbols({})
+
+    class FailingDailyOOSOpportunityV5:
+        def __init__(
+            self,
+            *,
+            product_df: pd.DataFrame,
+            orders_df: pd.DataFrame,
+            daily_stock_df: pd.DataFrame,
+            site_map_df: pd.DataFrame,
+            config: object,
+        ) -> None:
+            self.product_df = product_df
+            self.orders_df = orders_df
+            self.daily_stock_df = daily_stock_df
+            self.site_map_df = site_map_df
+            self.config = config
+
+        def run(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+            raise error
+
+    symbols["DailyOOSOpportunityV5"] = FailingDailyOOSOpportunityV5
+    return symbols
