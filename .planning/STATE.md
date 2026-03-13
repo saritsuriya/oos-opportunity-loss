@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 4
 current_phase_name: Results Workspace
 current_plan: 0
-status: Ready for next phase
-stopped_at: Phase 4 ready for context capture
-last_updated: "2026-03-13T04:20:00.000Z"
-last_activity: 2026-03-13 — Completed Phase 3 V5 calculation runs
+status: Ready for planning
+stopped_at: Phase 4 context gathered
+last_updated: "2026-03-13T05:10:00.000Z"
+last_activity: 2026-03-13 — Captured Phase 4 results workspace context
 progress:
   total_phases: 5
   completed_phases: 3
@@ -24,7 +24,7 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-11)
 
 **Core value:** Make monthly opportunity-loss calculation easier to operate from the browser without changing the current V5 business logic.
-**Current focus:** Phase 4 planning after completing the Phase 3 run workflow
+**Current focus:** Phase 4 planning after capturing results-workspace decisions
 
 ## Current Position
 
@@ -33,15 +33,15 @@ See: `.planning/PROJECT.md` (updated 2026-03-11)
 **Total Phases:** 5
 **Current Plan:** 0
 **Total Plans in Phase:** 3
-**Status:** Ready for next phase
-**Last Activity:** 2026-03-13 — Completed Phase 3 V5 calculation runs
-**Last Activity Description:** The wizard can now suggest a run month, execute frozen V5, preserve run status, and block stale-result review until rerun
+**Status:** Ready for planning
+**Last Activity:** 2026-03-13 — Captured Phase 4 results workspace context
+**Last Activity Description:** Review/export layout, QA posture, explainability defaults, and export behavior are now locked for planning
 **Progress:** [██████░░░░] 60%
 
 Phase: 4 of 5 (Results Workspace)
 Plan: 0 of 3 in current phase
-Status: Ready for next phase
-Last activity: 2026-03-13 — Completed Phase 3 V5 calculation runs
+Status: Ready for planning
+Last activity: 2026-03-13 — Captured Phase 4 results workspace context
 
 ## Performance Metrics
 
@@ -102,6 +102,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Kept one structured run payload in session state instead of scattering selected month and status across widget-local keys.
 - [Phase 03]: Reused Phase 2 upload readiness as the run precondition instead of duplicating validation checks in the run step.
 - [Phase 03]: Blocked review/export after staged inputs changed so successful runs cannot be treated as current once uploads are replaced.
+- [Phase 04]: Locked the results workspace as an overview-first step with tabs inside one page rather than a free-form dashboard.
+- [Phase 04]: Chose strong but non-blocking QA, with top-level warnings and unmapped-site visibility before drill-down.
+- [Phase 04]: Kept exports in a dedicated tab with one prominent workbook action and named CSV downloads.
 
 ### Pending Todos
 
@@ -113,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T04:20:00.000Z
-Stopped at: Phase 4 ready for context capture
-Resume file: .planning/ROADMAP.md
+Last session: 2026-03-13T05:10:00.000Z
+Stopped at: Phase 4 context gathered
+Resume file: .planning/phases/04-results-workspace/04-CONTEXT.md
