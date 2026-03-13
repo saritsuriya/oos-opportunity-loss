@@ -116,6 +116,9 @@ class V5RunResult:
         return {
             "ok": self.ok,
             "status": self.status,
+            "period": self.request.period,
+            "output_dir": str(self.request.output_dir),
+            "output_workbook": str(self.request.output_workbook),
             "request": self.request.as_dict(),
             "artifacts": self.artifacts.as_dict(),
             "detail_row_count": self.detail_row_count,
@@ -238,12 +241,20 @@ def execute_frozen_v5_run(
         detail, qa_summary, unmapped_site = model.run()
 
         reporter = resolved_symbols["ReporterV5"]()
-        reporter.generate(
-            detail,
-            qa_summary,
-            unmapped_site,
-            str(request.output_workbook),
-        )
+        generated_workbook = Path(
+            reporter.generate(
+                detail,
+                qa_summary,
+                unmapped_site,
+                str(request.output_workbook),
+            )
+        ).expanduser().resolve()
+        if generated_workbook != request.output_workbook:
+            msg = (
+                "Frozen V5 reporter returned an unexpected workbook path: "
+                f"{generated_workbook}"
+            )
+            raise ValueError(msg)
         _ensure_expected_artifacts_exist(request.artifacts)
         return V5RunResult.success(
             request=request,
