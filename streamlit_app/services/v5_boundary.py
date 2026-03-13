@@ -41,9 +41,84 @@ class RunBlueprint:
     input_dir: Path
     output_dir: Path
     output_workbook: Path
+    output_detail_csv: Path
+    output_summary_site_csv: Path
+    output_summary_sku_csv: Path
+    output_summary_total_csv: Path
+    output_qa_summary_csv: Path
     bundled_site_mapping: Path | None
     eval_year: int
     eval_month: int
+
+
+@dataclass(frozen=True)
+class RunArtifacts:
+    workbook: Path
+    detail_csv: Path
+    summary_site_csv: Path
+    summary_sku_csv: Path
+    summary_total_csv: Path
+    qa_summary_csv: Path
+
+    def as_dict(self) -> dict[str, str]:
+        return {
+            "workbook": str(self.workbook),
+            "detail_csv": str(self.detail_csv),
+            "summary_site_csv": str(self.summary_site_csv),
+            "summary_sku_csv": str(self.summary_sku_csv),
+            "summary_total_csv": str(self.summary_total_csv),
+            "qa_summary_csv": str(self.qa_summary_csv),
+        }
+
+
+@dataclass(frozen=True)
+class FrozenV5RunRequest:
+    orders_path: Path
+    daily_stock_path: Path
+    product_path: Path
+    site_mapping_path: Path
+    output_dir: Path
+    output_workbook: Path
+    artifacts: RunArtifacts
+    eval_year: int
+    eval_month: int
+    baseline_recent_months: int = 6
+    baseline_fallback_months: int = 6
+
+    @property
+    def period(self) -> str:
+        return f"{self.eval_year}-{self.eval_month:02d}"
+
+    def build_input_paths(self, input_paths_type: type[Any]) -> Any:
+        return input_paths_type(
+            orders_path=str(self.orders_path),
+            daily_stock_path=str(self.daily_stock_path),
+            site_mapping_path=str(self.site_mapping_path),
+            product_path=str(self.product_path),
+        )
+
+    def build_model_config(self, model_config_type: type[Any]) -> Any:
+        return model_config_type(
+            eval_year=self.eval_year,
+            eval_month=self.eval_month,
+            baseline_recent_months=self.baseline_recent_months,
+            baseline_fallback_months=self.baseline_fallback_months,
+        )
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "orders_path": str(self.orders_path),
+            "daily_stock_path": str(self.daily_stock_path),
+            "product_path": str(self.product_path),
+            "site_mapping_path": str(self.site_mapping_path),
+            "output_dir": str(self.output_dir),
+            "output_workbook": str(self.output_workbook),
+            "artifacts": self.artifacts.as_dict(),
+            "eval_year": self.eval_year,
+            "eval_month": self.eval_month,
+            "baseline_recent_months": self.baseline_recent_months,
+            "baseline_fallback_months": self.baseline_fallback_months,
+        }
 
 
 @dataclass(frozen=True)
@@ -69,14 +144,82 @@ def locate_bundled_site_mapping() -> Path | None:
 def build_run_blueprint(workspace_root: str | Path, eval_year: int, eval_month: int) -> RunBlueprint:
     workspace = Path(workspace_root).resolve()
     period = f"{eval_year}-{eval_month:02d}"
+    output_dir = workspace / "outputs"
+    base_name = output_dir / f"OOS_Opportunity_Lost_{period}_V5"
+    output_workbook = output_dir / f"OOS_Opportunity_Lost_{period}_V5.xlsx"
     return RunBlueprint(
         workspace_root=workspace,
         input_dir=workspace / "inputs",
-        output_dir=workspace / "outputs",
-        output_workbook=workspace / "outputs" / f"OOS_Opportunity_Lost_{period}_V5.xlsx",
+        output_dir=output_dir,
+        output_workbook=output_workbook,
+        output_detail_csv=Path(f"{base_name}_detail.csv"),
+        output_summary_site_csv=Path(f"{base_name}_summary_site.csv"),
+        output_summary_sku_csv=Path(f"{base_name}_summary_sku.csv"),
+        output_summary_total_csv=Path(f"{base_name}_summary_total.csv"),
+        output_qa_summary_csv=Path(f"{base_name}_qa_summary.csv"),
         bundled_site_mapping=locate_bundled_site_mapping(),
         eval_year=eval_year,
         eval_month=eval_month,
+    )
+
+
+def build_run_artifacts(output_dir: str | Path, eval_year: int, eval_month: int) -> RunArtifacts:
+    resolved_output_dir = Path(output_dir).resolve()
+    period = f"{eval_year}-{eval_month:02d}"
+    base_name = resolved_output_dir / f"OOS_Opportunity_Lost_{period}_V5"
+    return RunArtifacts(
+        workbook=resolved_output_dir / f"OOS_Opportunity_Lost_{period}_V5.xlsx",
+        detail_csv=Path(f"{base_name}_detail.csv"),
+        summary_site_csv=Path(f"{base_name}_summary_site.csv"),
+        summary_sku_csv=Path(f"{base_name}_summary_sku.csv"),
+        summary_total_csv=Path(f"{base_name}_summary_total.csv"),
+        qa_summary_csv=Path(f"{base_name}_qa_summary.csv"),
+    )
+
+
+def build_frozen_v5_run_request(
+    *,
+    workspace_root: str | Path,
+    orders_path: str | Path,
+    daily_stock_path: str | Path,
+    product_path: str | Path,
+    eval_year: int,
+    eval_month: int,
+    baseline_recent_months: int = 6,
+    baseline_fallback_months: int = 6,
+) -> FrozenV5RunRequest:
+    blueprint = build_run_blueprint(workspace_root, eval_year, eval_month)
+    site_mapping_path = blueprint.bundled_site_mapping
+    if site_mapping_path is None:
+        msg = "Bundled site mapping not found for frozen V5 execution."
+        raise FileNotFoundError(msg)
+
+    resolved_orders = Path(orders_path).expanduser().resolve()
+    resolved_daily_stock = Path(daily_stock_path).expanduser().resolve()
+    resolved_product = Path(product_path).expanduser().resolve()
+    for label, path in (
+        ("orders", resolved_orders),
+        ("daily_stock", resolved_daily_stock),
+        ("product", resolved_product),
+        ("site_mapping", site_mapping_path),
+    ):
+        if not path.exists() or not path.is_file():
+            msg = f"Frozen V5 run input '{label}' not found: {path}"
+            raise FileNotFoundError(msg)
+
+    artifacts = build_run_artifacts(blueprint.output_dir, eval_year, eval_month)
+    return FrozenV5RunRequest(
+        orders_path=resolved_orders,
+        daily_stock_path=resolved_daily_stock,
+        product_path=resolved_product,
+        site_mapping_path=site_mapping_path.resolve(),
+        output_dir=blueprint.output_dir,
+        output_workbook=artifacts.workbook,
+        artifacts=artifacts,
+        eval_year=eval_year,
+        eval_month=eval_month,
+        baseline_recent_months=baseline_recent_months,
+        baseline_fallback_months=baseline_fallback_months,
     )
 
 
