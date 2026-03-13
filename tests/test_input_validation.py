@@ -43,6 +43,20 @@ def write_valid_sales_tsv(path: Path) -> None:
     ).to_csv(path, index=False, sep="\t", encoding="utf-16")
 
 
+def write_valid_sales_export_csv(path: Path) -> None:
+    pd.DataFrame(
+        {
+            "Purchase Date": ["2026-02-01", "2026-02-28"],
+            "Sku": ["SKU-1", "SKU-2"],
+            "stock": ["bkk-out", "dmk-out"],
+            "Quantity": [2, 4],
+            "Gross": [100, 200],
+            "Net": [90, 180],
+            "Product Name": ["Bag", "Watch"],
+        }
+    ).to_csv(path, index=False, sep="\t", encoding="utf-16")
+
+
 def write_empty_stock_csv(path: Path) -> None:
     pd.DataFrame(columns=["posting_date", "site_code", "article_code", "stock_balance"]).to_csv(path, index=False)
 
@@ -109,7 +123,7 @@ def write_sku_missing_columns(path: Path) -> None:
 
 def test_critical_rejects_unsupported_formats_for_each_slot(tmp_path: Path) -> None:
     cases = (
-        ("sales", "sales.csv"),
+        ("sales", "sales.json"),
         ("stock", "stock.xlsx"),
         ("sku_live", "sku-live.txt"),
     )
@@ -242,6 +256,7 @@ def test_warnings_include_near_empty_warning_for_sku_live(tmp_path: Path) -> Non
     ("slot_key", "filename", "writer", "expected_row_count"),
     (
         ("sales", "sales.xlsx", write_valid_sales_excel, 2),
+        ("sales", "sales.csv", write_valid_sales_export_csv, 2),
         ("sales", "sales.tsv", write_valid_sales_tsv, 2),
         ("stock", "stock.csv", write_valid_stock_csv, 2),
         ("sku_live", "sku-live.csv", write_valid_sku_csv, 2),

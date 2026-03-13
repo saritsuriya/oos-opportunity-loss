@@ -101,7 +101,7 @@ def test_replace_upload_staging_refreshes_registry_metadata(tmp_path: Path) -> N
 def test_staging_paths_are_deterministic_for_all_slots(tmp_path: Path) -> None:
     workspace = ensure_session_workspace("deterministic-slots", base_dir=tmp_path)
     slot_cases = {
-        "sales": ("monthly-sales.xlsm", workspace.input_dir / "sales" / "current.xlsm"),
+        "sales": ("monthly-sales.csv", workspace.input_dir / "sales" / "current.csv"),
         "stock": ("stock.csv", workspace.input_dir / "stock" / "current.csv"),
         "sku_live": ("sku-live.csv", workspace.input_dir / "sku-live" / "current.csv"),
     }

@@ -40,7 +40,7 @@ _UPLOAD_SLOTS: tuple[UploadSlot, ...] = (
         key="sales",
         label="Sales",
         directory_name="sales",
-        accepted_extensions=(".xlsx", ".xlsm", ".xls", ".tsv", ".txt"),
+        accepted_extensions=(".xlsx", ".xlsm", ".xls", ".csv", ".tsv", ".txt"),
         default_extension=".xlsx",
     ),
     UploadSlot(
