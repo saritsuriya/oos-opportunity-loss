@@ -22,14 +22,7 @@ def render_review_results_step() -> None:
     load_result = load_results_workspace(run_state)
 
     if not load_result.ok or load_result.payload is None:
-        st.error(
-            load_result.error_message
-            or "The current session does not have a completed run ready for review."
-        )
-        st.info(
-            "Return to `Run Frozen V5`, complete a successful run for the current staged inputs, "
-            "then come back to review the results."
-        )
+        _render_results_error(load_result.error_type, load_result.error_message)
         return
 
     payload = load_result.payload
@@ -39,13 +32,14 @@ def render_review_results_step() -> None:
     _render_trust_banner(payload.overview, upload_warnings)
     _render_overview_metrics(payload.overview)
 
-    overview_tab, site_tab, sku_tab, detail_tab, qa_tab = st.tabs(
+    overview_tab, site_tab, sku_tab, detail_tab, qa_tab, export_tab = st.tabs(
         [
             "Overview",
             "By Site",
             "By SKU",
             "Detail",
             "QA And Trust",
+            "Export",
         ]
     )
 
@@ -83,6 +77,9 @@ def render_review_results_step() -> None:
 
     with qa_tab:
         _render_qa_tab(payload, upload_warnings)
+
+    with export_tab:
+        _render_export_tab(payload)
 
 
 def _render_trust_banner(
@@ -208,6 +205,43 @@ def _render_qa_tab(payload, upload_warnings: list[str]) -> None:
     )
 
 
+def _render_export_tab(payload) -> None:
+    st.subheader("Export Files")
+    if not payload.is_current:
+        st.warning(
+            "The staged inputs changed after the last successful run. "
+            "Run V5 again before exporting these files."
+        )
+
+    workbook_artifact = payload.export_manifest[0]
+    st.markdown(f"**{workbook_artifact.label}**")
+    st.caption(workbook_artifact.path.name)
+    st.download_button(
+        label="Download Excel Workbook",
+        data=workbook_artifact.path.read_bytes(),
+        file_name=workbook_artifact.path.name,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="download_workbook",
+        disabled=not payload.is_current,
+    )
+
+    st.subheader("CSV Exports")
+    for artifact in payload.export_manifest[1:]:
+        label_col, action_col = st.columns([3, 2])
+        with label_col:
+            st.markdown(f"**{artifact.label}**")
+            st.caption(artifact.path.name)
+        with action_col:
+            st.download_button(
+                label=f"Download {artifact.label}",
+                data=artifact.path.read_bytes(),
+                file_name=artifact.path.name,
+                mime="text/csv",
+                key=f"download_{artifact.key}",
+                disabled=not payload.is_current,
+            )
+
+
 def _ordered_detail_frame(detail: pd.DataFrame) -> pd.DataFrame:
     preferred_columns = [
         "sku",
@@ -255,3 +289,30 @@ def _arrow_safe_frame(frame: pd.DataFrame) -> pd.DataFrame:
         if len(types) > 1:
             safe_frame[column] = safe_frame[column].astype(str)
     return safe_frame
+
+
+def _render_results_error(error_type: str | None, error_message: str | None) -> None:
+    if error_type == "MissingResultsArtifact":
+        st.error(error_message or "One or more generated result files are missing.")
+        st.info(
+            "The completed run artifacts are no longer available in this session workspace. "
+            "Go back to `Run Frozen V5` and rerun before reviewing or exporting."
+        )
+        return
+
+    if error_type == "InvalidResultsWorkspaceState":
+        st.error(error_message or "A completed successful run is required before review.")
+        st.info(
+            "Return to `Run Frozen V5`, complete a successful run for the current staged inputs, "
+            "then come back to review the results."
+        )
+        return
+
+    st.error(
+        error_message
+        or "The current session does not have a completed run ready for review."
+    )
+    st.info(
+        "Return to `Run Frozen V5`, complete a successful run for the current staged inputs, "
+        "then come back to review the results."
+    )
