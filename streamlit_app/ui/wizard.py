@@ -12,7 +12,9 @@ try:
         rewind_step,
         set_current_step,
     )
+    from streamlit_app.services.run_workflow import RUN_STATUS_SUCCEEDED, RUN_WORKFLOW_STATE_KEY
     from streamlit_app.services.v5_boundary import get_boundary_overview
+    from streamlit_app.ui.run_v5 import render_run_v5_step
     from streamlit_app.ui.upload_inputs import UPLOAD_STEP_READINESS_KEY, render_upload_inputs_step
 except ModuleNotFoundError:
     from runtime.session_state import (
@@ -22,7 +24,9 @@ except ModuleNotFoundError:
         rewind_step,
         set_current_step,
     )
+    from services.run_workflow import RUN_STATUS_SUCCEEDED, RUN_WORKFLOW_STATE_KEY
     from services.v5_boundary import get_boundary_overview
+    from ui.run_v5 import render_run_v5_step
     from ui.upload_inputs import UPLOAD_STEP_READINESS_KEY, render_upload_inputs_step
 
 
@@ -92,16 +96,7 @@ def _render_current_step() -> None:
     elif step.slug == "upload-inputs":
         render_upload_inputs_step()
     elif step.slug == "run-v5":
-        st.warning("Placeholder for Phase 3 V5 run orchestration.")
-        st.markdown(
-            "\n".join(
-                [
-                    "- This step will call the reusable V5 boundary instead of the CLI entrypoint.",
-                    "- Operators will be able to run the frozen logic for a selected month.",
-                    "- Run status and failure feedback will stay visible in the session shell.",
-                ]
-            )
-        )
+        render_run_v5_step()
     else:
         st.warning("Placeholder for Phase 4 QA review and export.")
         st.markdown(
@@ -119,7 +114,15 @@ def _render_navigation() -> None:
     previous_col, spacer_col, next_col = st.columns([1, 2, 1])
     step = get_wizard_steps()[current_step_index()]
     readiness = st.session_state.get(UPLOAD_STEP_READINESS_KEY, {})
+    run_state = st.session_state.get(RUN_WORKFLOW_STATE_KEY, {})
+    run_step_ready = (
+        isinstance(run_state, dict)
+        and run_state.get("status") == RUN_STATUS_SUCCEEDED
+        and not bool(run_state.get("inputs_changed_since_last_run"))
+    )
     next_disabled = step.slug == "upload-inputs" and not bool(readiness.get("is_ready"))
+    if step.slug == "run-v5" and not run_step_ready:
+        next_disabled = True
     with previous_col:
         if st.button("Previous step", disabled=current_step_index() == 0):
             rewind_step()
@@ -134,18 +137,25 @@ def _render_navigation() -> None:
                 advance_step()
             st.rerun()
     if next_disabled:
-        st.caption("Upload all three required inputs and resolve blocking errors to continue.")
+        if step.slug == "upload-inputs":
+            st.caption("Upload all three required inputs and resolve blocking errors to continue.")
+        elif step.slug == "run-v5":
+            st.caption("Complete a successful Run V5 with the current staged inputs to continue.")
 
 
 def _display_phase_hint(step_slug: str, default_hint: str) -> str:
     if step_slug == "upload-inputs":
         return "Phase 2 live now"
+    if step_slug == "run-v5":
+        return "Phase 3 live now"
     return default_hint
 
 
 def _display_step_summary(step_slug: str, default_summary: str) -> str:
     if step_slug == "upload-inputs":
         return "Stage and validate the three required run-scoped input files from one screen."
+    if step_slug == "run-v5":
+        return "Select the evaluation month, run frozen V5, and stay on this step for the outcome."
     return default_summary
 
 
