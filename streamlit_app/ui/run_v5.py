@@ -32,11 +32,16 @@ except ModuleNotFoundError:
 
 def render_run_v5_step() -> None:
     run_state = sync_run_workflow_state(st.session_state)
+    upload_readiness = st.session_state.get("upload_step_readiness", {})
+    uploads_ready = bool(upload_readiness.get("is_ready")) if isinstance(upload_readiness, Mapping) else False
 
     _render_run_metrics(run_state)
     _render_staged_input_recap()
-    run_state = _render_month_controls(run_state)
-    _render_suggestion_guidance(run_state)
+    if uploads_ready:
+        run_state = _render_month_controls(run_state)
+        _render_suggestion_guidance(run_state)
+    else:
+        st.caption("Upload and validate all required inputs above to unlock month selection.")
     _render_preconditions(run_state)
 
     run_button_disabled = not bool(run_state["can_run"]) or run_state["status"] == RUN_STATUS_RUNNING
@@ -169,7 +174,7 @@ def _render_run_outcome(run_state: Mapping[str, object]) -> None:
         workbook_path = _extract_artifact_path(result, "workbook")
         if workbook_path:
             st.caption(f"Workbook ready: {workbook_path}")
-        st.info("Use Next step when you want to review the generated workbook and CSV outputs.")
+        st.info("Review and export the generated workbook and CSV outputs below when you are ready.")
         return
 
     if status == RUN_STATUS_FAILED:

@@ -66,4 +66,7 @@ def test_streamlit_app_entrypoint_renders_guided_shell() -> None:
     assert app.title[0].value == "OOS Opportunity Loss Workspace"
     assert app.session_state["session_bootstrapped"] is True
     assert app.session_state["current_step_index"] == 0
-    assert any(subheader.value == "MVP Boundary" for subheader in app.subheader)
+    assert any(subheader.value == "Workflow" for subheader in app.subheader)
+    assert any(subheader.value == "Upload Inputs" for subheader in app.subheader)
+    assert any(subheader.value == "Run Frozen V5" for subheader in app.subheader)
+    assert any(subheader.value == "Review And Export" for subheader in app.subheader)

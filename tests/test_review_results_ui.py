@@ -144,15 +144,33 @@ def _seed_completed_run(
     if run_state is None:
         run_state = _build_completed_run_state(tmp_path)
     app.session_state[RUN_WORKFLOW_STATE_KEY] = run_state
+    if registry is None:
+        staged_sales_path = tmp_path / "inputs" / "sales" / "current.tsv"
+        staged_sales_path.parent.mkdir(parents=True, exist_ok=True)
+        staged_sales_path.write_text("placeholder", encoding="utf-8")
+        registry = {
+            "sales": {
+                "current_file": {
+                    "source_name": "sales.tsv",
+                    "staged_path": str(staged_sales_path),
+                    "size_bytes": 10,
+                    "slot_key": "sales",
+                }
+            }
+        }
     if registry is not None:
         app.session_state[UPLOAD_REGISTRY_KEY] = registry
     app.session_state["upload_validation_results"] = {
         "sales": {
+            "slot_key": "sales",
+            "source_name": "sales.tsv",
+            "staged_path": str(registry["sales"]["current_file"]["staged_path"]),
             "warnings": [
                 {
                     "message": "Detected data from multiple months in the uploaded file.",
                 }
-            ]
+            ],
+            "summary": {},
         }
     }
     app.session_state["current_step_index"] = 3

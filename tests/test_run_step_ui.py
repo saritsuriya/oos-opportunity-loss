@@ -39,7 +39,6 @@ def test_run_step_month_controls_show_suggestion_and_explicit_run_action(
         "Suggested evaluation month: March 2026." in node.value for node in app.info
     )
     assert app.session_state[RUN_WORKFLOW_STATE_KEY]["selected_period"] == "2026-03"
-    assert _button_by_label(app, "Next step").disabled is True
 
 
 def test_run_step_outcome_success_stays_on_step_and_enables_review(
@@ -55,11 +54,10 @@ def test_run_step_outcome_success_stays_on_step_and_enables_review(
     _click_button(app, "Run V5")
 
     assert len(app.exception) == 0
-    assert app.session_state["current_step_index"] == 2
     assert app.session_state["active_run_status"] == "Succeeded"
     assert any("completed successfully" in node.value for node in app.success)
-    assert any("Use Next step" in node.value for node in app.info)
-    assert _button_by_label(app, "Next step").disabled is False
+    assert any("Review and export the generated workbook and CSV outputs below" in node.value for node in app.info)
+    assert any(node.value == "Review And Export" for node in app.subheader)
 
 
 def test_run_step_outcome_failure_shows_rerun_guidance(
@@ -79,7 +77,6 @@ def test_run_step_outcome_failure_shows_rerun_guidance(
     assert any("Frozen V5 failed" in node.value for node in app.error)
     assert any("analysis failed" in node.value for node in app.markdown)
     assert any("rerun with the current staged files" in node.value for node in app.info)
-    assert _button_by_label(app, "Next step").disabled is True
 
 
 def test_run_step_rerun_uses_current_staged_files(
@@ -103,14 +100,12 @@ def test_run_step_rerun_uses_current_staged_files(
     _replace_sales_upload(app, payload=_sales_bytes("replacement.tsv"))
 
     assert any("staged inputs changed" in node.value.lower() for node in app.warning)
-    assert _button_by_label(app, "Next step").disabled is True
 
     _click_button(app, "Run V5")
 
     assert len(app.exception) == 0
     assert calls == ["sales.tsv", "replacement.tsv"]
     assert app.session_state[RUN_WORKFLOW_STATE_KEY]["status"] == RUN_STATUS_SUCCEEDED
-    assert _button_by_label(app, "Next step").disabled is False
 
 
 class _FakeUpload:

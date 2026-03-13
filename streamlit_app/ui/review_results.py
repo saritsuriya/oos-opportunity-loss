@@ -296,23 +296,21 @@ def _render_results_error(error_type: str | None, error_message: str | None) -> 
         st.error(error_message or "One or more generated result files are missing.")
         st.info(
             "The completed run artifacts are no longer available in this session workspace. "
-            "Go back to `Run Frozen V5` and rerun before reviewing or exporting."
+            "Rerun Frozen V5 above before reviewing or exporting."
         )
         return
 
     if error_type == "InvalidResultsWorkspaceState":
-        st.error(error_message or "A completed successful run is required before review.")
+        st.info(error_message or "A completed successful run is required before review.")
         st.info(
-            "Return to `Run Frozen V5`, complete a successful run for the current staged inputs, "
-            "then come back to review the results."
+            "Complete a successful run above for the current staged inputs, then review the results here."
         )
         return
 
-    st.error(
+    st.info(
         error_message
         or "The current session does not have a completed run ready for review."
     )
     st.info(
-        "Return to `Run Frozen V5`, complete a successful run for the current staged inputs, "
-        "then come back to review the results."
+        "Complete a successful run above for the current staged inputs, then review the results here."
     )

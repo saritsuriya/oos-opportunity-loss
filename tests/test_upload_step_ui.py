@@ -46,8 +46,6 @@ def test_upload_step_layout_renders_three_required_cards(tmp_path: Path, monkeyp
     assert app.metric[5].value == "3"
     assert "Sales: upload required." in app.error[0].value
     assert "SKU / Live: upload required." in app.error[0].value
-    assert app.button[1].label == "Next step"
-    assert app.button[1].disabled is True
 
 
 def test_upload_step_site_map_panel_shows_bundled_status_and_summaries(
@@ -79,7 +77,6 @@ def test_upload_step_site_map_panel_shows_bundled_status_and_summaries(
     assert readiness["is_ready"] is True
     assert readiness["ready_slots"] == 3
     assert readiness["warning_count"] == 1
-    assert app.button[1].disabled is False
 
 
 def test_upload_step_blocks_progress_for_validation_errors(tmp_path: Path, monkeypatch) -> None:
@@ -113,7 +110,6 @@ def test_upload_step_blocks_progress_for_validation_errors(tmp_path: Path, monke
     )
     assert app.metric[4].value == "2/3"
     assert app.metric[5].value == "1"
-    assert app.button[1].disabled is True
 
 
 def test_upload_step_refreshes_readiness_after_last_slot_is_processed(tmp_path: Path, monkeypatch) -> None:
@@ -150,7 +146,6 @@ def test_upload_step_refreshes_readiness_after_last_slot_is_processed(tmp_path: 
     assert readiness["ready_slots"] == 3
     assert app.metric[4].value == "3/3"
     assert app.metric[5].value == "0"
-    assert app.button[1].disabled is False
 
 
 class FakeUpload:
