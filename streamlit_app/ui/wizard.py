@@ -14,6 +14,7 @@ try:
     )
     from streamlit_app.services.run_workflow import RUN_STATUS_SUCCEEDED, RUN_WORKFLOW_STATE_KEY
     from streamlit_app.services.v5_boundary import get_boundary_overview
+    from streamlit_app.ui.review_results import render_review_results_step
     from streamlit_app.ui.run_v5 import render_run_v5_step
     from streamlit_app.ui.upload_inputs import UPLOAD_STEP_READINESS_KEY, render_upload_inputs_step
 except ModuleNotFoundError:
@@ -26,6 +27,7 @@ except ModuleNotFoundError:
     )
     from services.run_workflow import RUN_STATUS_SUCCEEDED, RUN_WORKFLOW_STATE_KEY
     from services.v5_boundary import get_boundary_overview
+    from ui.review_results import render_review_results_step
     from ui.run_v5 import render_run_v5_step
     from ui.upload_inputs import UPLOAD_STEP_READINESS_KEY, render_upload_inputs_step
 
@@ -98,16 +100,7 @@ def _render_current_step() -> None:
     elif step.slug == "run-v5":
         render_run_v5_step()
     else:
-        st.warning("Placeholder for Phase 4 QA review and export.")
-        st.markdown(
-            "\n".join(
-                [
-                    "- Result summaries and explainability checks will render here.",
-                    "- Download actions will expose workbook and CSV outputs from the active session.",
-                    "- The flow remains stateless until persistence enhancements arrive in a later phase.",
-                ]
-            )
-        )
+        render_review_results_step()
 
 
 def _render_navigation() -> None:
@@ -148,6 +141,8 @@ def _display_phase_hint(step_slug: str, default_hint: str) -> str:
         return "Phase 2 live now"
     if step_slug == "run-v5":
         return "Phase 3 live now"
+    if step_slug == "review-results":
+        return "Phase 4 live now"
     return default_hint
 
 
@@ -156,6 +151,8 @@ def _display_step_summary(step_slug: str, default_summary: str) -> str:
         return "Stage and validate the three required run-scoped input files from one screen."
     if step_slug == "run-v5":
         return "Select the evaluation month, run frozen V5, and stay on this step for the outcome."
+    if step_slug == "review-results":
+        return "Review the completed run, inspect trust signals, and prepare the export handoff."
     return default_summary
 
 
