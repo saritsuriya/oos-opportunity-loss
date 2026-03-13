@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 4
-current_phase_name: Results Workspace
+current_phase: 5
+current_phase_name: Persistence Enhancements
 current_plan: 0
-status: Ready for planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-13T05:10:00.000Z"
-last_activity: 2026-03-13 — Captured Phase 4 results workspace context
+status: Ready for next phase
+stopped_at: Phase 5 ready for context capture
+last_updated: "2026-03-13T08:10:00.000Z"
+last_activity: 2026-03-13 — Completed Phase 4 results workspace
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 60
+  completed_phases: 4
+  total_plans: 12
+  completed_plans: 12
+  percent: 80
 ---
 
 # Project State
@@ -24,31 +24,31 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-11)
 
 **Core value:** Make monthly opportunity-loss calculation easier to operate from the browser without changing the current V5 business logic.
-**Current focus:** Phase 4 planning after capturing results-workspace decisions
+**Current focus:** Phase 5 persistence enhancements after completing the stateless MVP review/export flow
 
 ## Current Position
 
-**Current Phase:** 4
-**Current Phase Name:** Results Workspace
+**Current Phase:** 5
+**Current Phase Name:** Persistence Enhancements
 **Total Phases:** 5
 **Current Plan:** 0
 **Total Plans in Phase:** 3
-**Status:** Ready for planning
-**Last Activity:** 2026-03-13 — Captured Phase 4 results workspace context
-**Last Activity Description:** Review/export layout, QA posture, explainability defaults, and export behavior are now locked for planning
-**Progress:** [██████░░░░] 60%
+**Status:** Ready for next phase
+**Last Activity:** 2026-03-13 — Completed Phase 4 results workspace
+**Last Activity Description:** The browser now supports summary review, QA/explainability inspection, and workbook/CSV exports from completed runs
+**Progress:** [████████░░] 80%
 
-Phase: 4 of 5 (Results Workspace)
+Phase: 5 of 5 (Persistence Enhancements)
 Plan: 0 of 3 in current phase
-Status: Ready for planning
-Last activity: 2026-03-13 — Captured Phase 4 results workspace context
+Status: Ready for next phase
+Last activity: 2026-03-13 — Completed Phase 4 results workspace
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 12
 - Average duration: 6.3 min
-- Total execution time: 1.0 hours
+- Total execution time: 1.3 hours
 
 **By Phase:**
 
@@ -57,10 +57,11 @@ Last activity: 2026-03-13 — Captured Phase 4 results workspace context
 | 01 | 3 | 21 min | 7 min |
 | 02 | 3 | 20 min | 6.7 min |
 | 03 | 3 | 18 min | 6 min |
+| 04 | 3 | 36 min | 12 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (3 min), 02-03 (11 min), 03-01 (3 min), 03-02 (8 min), 03-03 (7 min)
-- Trend: Phase 3 kept the same fast feedback loop while moving from service contracts into the browser execution path.
+- Last 5 plans: 03-02 (8 min), 03-03 (7 min), 04-01 (12 min), 04-02 (14 min), 04-03 (10 min)
+- Trend: Phase 4 expanded the browser workflow meaningfully but stayed inside a fast local feedback loop with focused service and AppTest coverage.
 
 **Recent plan metrics:**
 - Phase 01 P01 | 8 min | 3 tasks | 11 files
@@ -72,6 +73,9 @@ Last activity: 2026-03-13 — Captured Phase 4 results workspace context
 - Phase 03 P01 | 3 min | 3 tasks | 3 files
 - Phase 03 P02 | 8 min | 3 tasks | 3 files
 - Phase 03 P03 | 7 min | 3 tasks | 3 files
+- Phase 04 P01 | 12 min | 3 tasks | 3 files
+- Phase 04 P02 | 14 min | 3 tasks | 4 files
+- Phase 04 P03 | 10 min | 3 tasks | 3 files
 
 ## Accumulated Context
 
@@ -102,9 +106,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Kept one structured run payload in session state instead of scattering selected month and status across widget-local keys.
 - [Phase 03]: Reused Phase 2 upload readiness as the run precondition instead of duplicating validation checks in the run step.
 - [Phase 03]: Blocked review/export after staged inputs changed so successful runs cannot be treated as current once uploads are replaced.
-- [Phase 04]: Locked the results workspace as an overview-first step with tabs inside one page rather than a free-form dashboard.
-- [Phase 04]: Chose strong but non-blocking QA, with top-level warnings and unmapped-site visibility before drill-down.
-- [Phase 04]: Kept exports in a dedicated tab with one prominent workbook action and named CSV downloads.
+- [Phase 04]: Kept the results workspace overview-first and tabbed so the browser flow stays aligned with the wizard instead of drifting into a BI dashboard.
+- [Phase 04]: Reused generated artifacts as the source of truth for browser review and export instead of recalculating results in the review step.
+- [Phase 04]: Made QA/trust visible but non-blocking, and disabled exports when the current staged inputs no longer match the completed run.
 
 ### Pending Todos
 
@@ -116,6 +120,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T05:10:00.000Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-results-workspace/04-CONTEXT.md
+Last session: 2026-03-13T08:10:00.000Z
+Stopped at: Phase 5 ready for context capture
+Resume file: .planning/ROADMAP.md

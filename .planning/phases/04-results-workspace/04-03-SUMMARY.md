@@ -49,7 +49,7 @@ completed: 2026-03-13
 
 ## Wave Commit
 
-- **Wave 3 implementation:** pending local commit in orchestrator fallback
+- **Wave 3 implementation:** `38c8cc7` `feat(04-03): add results export flow`
 
 ## Files Created/Modified
 

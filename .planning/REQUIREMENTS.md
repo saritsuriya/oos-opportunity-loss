@@ -26,11 +26,11 @@
 
 ### Results And QA
 
-- [ ] **RES-01**: User can review summary total, summary by site, summary by SKU, and detail results in the web UI
-- [ ] **RES-02**: User can see QA warnings, validation issues, and data-coverage signals before trusting a run
-- [ ] **RES-03**: User can see key explainability fields such as baseline source and baseline window
-- [ ] **RES-04**: User can export result files in `.xlsx`
-- [ ] **RES-05**: User can export result files in `.csv`
+- [x] **RES-01**: User can review summary total, summary by site, summary by SKU, and detail results in the web UI
+- [x] **RES-02**: User can see QA warnings, validation issues, and data-coverage signals before trusting a run
+- [x] **RES-03**: User can see key explainability fields such as baseline source and baseline window
+- [x] **RES-04**: User can export result files in `.xlsx`
+- [x] **RES-05**: User can export result files in `.csv`
 
 ## v2 Requirements
 
@@ -85,11 +85,11 @@
 | RUN-01 | Phase 3 | Complete |
 | RUN-02 | Phase 3 | Complete |
 | RUN-03 | Phase 3 | Complete |
-| RES-01 | Phase 4 | Pending |
-| RES-02 | Phase 4 | Pending |
-| RES-03 | Phase 4 | Pending |
-| RES-04 | Phase 4 | Pending |
-| RES-05 | Phase 4 | Pending |
+| RES-01 | Phase 4 | Complete |
+| RES-02 | Phase 4 | Complete |
+| RES-03 | Phase 4 | Complete |
+| RES-04 | Phase 4 | Complete |
+| RES-05 | Phase 4 | Complete |
 | HIST-01 | Phase 5 | Deferred |
 | HIST-02 | Phase 5 | Deferred |
 | HIST-03 | Phase 5 | Deferred |
@@ -104,4 +104,4 @@
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-13 after completing Phase 3 V5 calculation runs*
+*Last updated: 2026-03-13 after completing Phase 4 results workspace*

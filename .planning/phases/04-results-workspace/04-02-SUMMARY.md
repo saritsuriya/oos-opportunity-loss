@@ -49,7 +49,7 @@ completed: 2026-03-13
 
 ## Wave Commit
 
-- **Wave 2 implementation:** pending local commit in orchestrator fallback
+- **Wave 2 implementation:** `18e6f76` `feat(04-02): build review results workspace`
 
 ## Files Created/Modified
 

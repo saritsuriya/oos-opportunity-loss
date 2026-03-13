@@ -49,7 +49,7 @@ completed: 2026-03-13
 
 ## Wave Commit
 
-- **Wave 1 implementation:** pending local commit in orchestrator fallback
+- **Wave 1 implementation:** `6a8dd22` `feat(04-01): add results workspace loader`
 
 ## Files Created/Modified
 

@@ -9,7 +9,7 @@ This roadmap now starts with a stateless MVP. The first goal is not to solve lon
 - [x] **Phase 1: Workspace Foundation** - Create the internal web app shell and temporary run workspace
 - [x] **Phase 2: Run Input Workflow** - Build per-run file upload and validation for required inputs
 - [x] **Phase 3: V5 Calculation Runs** - Extract and run the frozen V5 logic from uploaded files
-- [ ] **Phase 4: Results Workspace** - Deliver QA review and export workflow in the web UI
+- [x] **Phase 4: Results Workspace** - Deliver QA review and export workflow in the web UI
 - [ ] **Phase 5: Persistence Enhancements** - Add stored history, duplicate protection, and reusable dataset management after MVP
 
 ## Phase Details
@@ -71,9 +71,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: Build run results pages and summary/detail views
-- [ ] 04-02: Build QA and explainability surfaces for trust and troubleshooting
-- [ ] 04-03: Implement export generation and download workflow
+- [x] 04-01: Build run results pages and summary/detail views
+- [x] 04-02: Build QA and explainability surfaces for trust and troubleshooting
+- [x] 04-03: Implement export generation and download workflow
 
 ### Phase 5: Persistence Enhancements
 **Goal**: The product evolves beyond the stateless MVP by adding stored history and duplicate-safe monthly ingestion.
@@ -101,5 +101,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Workspace Foundation | 3/3 | Complete    | 2026-03-12 |
 | 2. Run Input Workflow | 3/3 | Complete | 2026-03-12 |
 | 3. V5 Calculation Runs | 3/3 | Complete | 2026-03-13 |
-| 4. Results Workspace | 0/3 | Not started | - |
+| 4. Results Workspace | 3/3 | Complete | 2026-03-13 |
 | 5. Persistence Enhancements | 0/3 | Deferred | - |
