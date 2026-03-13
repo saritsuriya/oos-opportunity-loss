@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from streamlit_app.services.input_validation import validate_staged_input
 from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY, stage_uploaded_file
+from streamlit_app.ui import upload_inputs as upload_inputs_ui
 from streamlit_app.services.v5_boundary import get_bundled_site_mapping_status
 from streamlit_app.ui.upload_inputs import UPLOAD_STEP_READINESS_KEY
 
@@ -112,6 +114,43 @@ def test_upload_step_blocks_progress_for_validation_errors(tmp_path: Path, monke
     assert app.metric[4].value == "2/3"
     assert app.metric[5].value == "1"
     assert app.button[1].disabled is True
+
+
+def test_upload_step_refreshes_readiness_after_last_slot_is_processed(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("OOS_WORKSPACE_BASE_DIR", str(tmp_path))
+
+    app = AppTest.from_file(str(ROOT / "streamlit_app" / "app.py"))
+    app.run()
+    _seed_partial_registry(
+        app,
+        sales_payload=_sales_bytes_single_month(),
+        stock_payload=_stock_csv_bytes(),
+    )
+
+    original_render_slot_card = upload_inputs_ui._render_slot_card
+
+    def _inject_final_slot(slot_key, slot_state, validation_results):
+        if slot_key == "sku_live" and not slot_state.get("current_file"):
+            registry = app.session_state[UPLOAD_REGISTRY_KEY]
+            staged = stage_uploaded_file(
+                FakeUpload("sku-live.csv", _sku_csv_bytes()),
+                slot_key="sku_live",
+                workspace_input_dir=Path(app.session_state["workspace_input_dir"]),
+                registry=registry,
+            )
+            validation_results["sku_live"] = validate_staged_input(staged).as_dict()
+            slot_state = registry["sku_live"]
+        return original_render_slot_card(slot_key, slot_state, validation_results)
+
+    monkeypatch.setattr(upload_inputs_ui, "_render_slot_card", _inject_final_slot)
+    app.run()
+
+    readiness = app.session_state[UPLOAD_STEP_READINESS_KEY]
+    assert readiness["is_ready"] is True
+    assert readiness["ready_slots"] == 3
+    assert app.metric[4].value == "3/3"
+    assert app.metric[5].value == "0"
+    assert app.button[1].disabled is False
 
 
 class FakeUpload:
@@ -236,6 +275,36 @@ def _seed_registry(
     stage_uploaded_file(
         FakeUpload("sku-live.csv", sku_payload),
         slot_key="sku_live",
+        workspace_input_dir=workspace_input_dir,
+        registry=registry,
+    )
+
+    app.session_state[UPLOAD_REGISTRY_KEY] = registry
+    app.session_state["current_step_index"] = 1
+    app.run()
+
+
+def _seed_partial_registry(
+    app: AppTest,
+    *,
+    sales_payload: bytes,
+    stock_payload: bytes,
+) -> None:
+    registry = {
+        slot_key: dict(slot_state)
+        for slot_key, slot_state in app.session_state[UPLOAD_REGISTRY_KEY].items()
+    }
+    workspace_input_dir = Path(app.session_state["workspace_input_dir"])
+
+    stage_uploaded_file(
+        FakeUpload("sales.csv", sales_payload),
+        slot_key="sales",
+        workspace_input_dir=workspace_input_dir,
+        registry=registry,
+    )
+    stage_uploaded_file(
+        FakeUpload("stock.csv", stock_payload),
+        slot_key="stock",
         workspace_input_dir=workspace_input_dir,
         registry=registry,
     )

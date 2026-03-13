@@ -44,15 +44,18 @@ def render_upload_inputs_step() -> None:
     validation_results = st.session_state.setdefault(UPLOAD_VALIDATION_RESULTS_KEY, {})
 
     _sync_existing_validations(registry, validation_results)
-
-    readiness = _compute_readiness(registry, validation_results)
-    _render_readiness_banner(readiness)
+    readiness_placeholder = st.empty()
 
     columns = st.columns(len(get_upload_slots()))
     for column, slot in zip(columns, get_upload_slots(), strict=False):
         with column:
             with st.container(border=True):
                 _render_slot_card(slot.key, registry[slot.key], validation_results)
+
+    _sync_existing_validations(registry, validation_results)
+    readiness = _compute_readiness(registry, validation_results)
+    with readiness_placeholder.container():
+        _render_readiness_banner(readiness)
 
     st.divider()
     _render_site_mapping_panel()
