@@ -20,9 +20,9 @@
 
 ### Calculation Runs
 
-- [ ] **RUN-01**: User can create a calculation run for a selected month using the files uploaded in that run
-- [ ] **RUN-02**: System executes the frozen V5 logic and shows clear success/failure status
-- [ ] **RUN-03**: User can rerun by uploading the required files again without relying on stored business history
+- [x] **RUN-01**: User can create a calculation run for a selected month using the files uploaded in that run
+- [x] **RUN-02**: System executes the frozen V5 logic and shows clear success/failure status
+- [x] **RUN-03**: User can rerun by uploading the required files again without relying on stored business history
 
 ### Results And QA
 
@@ -82,9 +82,9 @@
 | DATA-03 | Phase 2 | Complete |
 | DATA-04 | Phase 2 | Complete |
 | DATA-05 | Phase 2 | Complete |
-| RUN-01 | Phase 3 | Pending |
-| RUN-02 | Phase 3 | Pending |
-| RUN-03 | Phase 3 | Pending |
+| RUN-01 | Phase 3 | Complete |
+| RUN-02 | Phase 3 | Complete |
+| RUN-03 | Phase 3 | Complete |
 | RES-01 | Phase 4 | Pending |
 | RES-02 | Phase 4 | Pending |
 | RES-03 | Phase 4 | Pending |
@@ -104,4 +104,4 @@
 
 ---
 *Requirements defined: 2026-03-11*
-*Last updated: 2026-03-12 after completing Phase 2 run input workflow*
+*Last updated: 2026-03-13 after completing Phase 3 V5 calculation runs*

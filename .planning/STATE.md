@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 3
-current_phase_name: V5 Calculation Runs
+current_phase: 4
+current_phase_name: Results Workspace
 current_plan: 0
 status: Ready for next phase
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-12T10:19:28.463Z"
-last_activity: 2026-03-12 — Completed Phase 2 run input workflow
+stopped_at: Phase 4 ready for context capture
+last_updated: "2026-03-13T04:20:00.000Z"
+last_activity: 2026-03-13 — Completed Phase 3 V5 calculation runs
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  completed_phases: 3
+  total_plans: 9
+  completed_plans: 9
+  percent: 60
 ---
 
 # Project State
@@ -24,31 +24,31 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-11)
 
 **Core value:** Make monthly opportunity-loss calculation easier to operate from the browser without changing the current V5 business logic.
-**Current focus:** Phase 3 planning after completing the Phase 2 run input workflow
+**Current focus:** Phase 4 planning after completing the Phase 3 run workflow
 
 ## Current Position
 
-**Current Phase:** 3
-**Current Phase Name:** V5 Calculation Runs
+**Current Phase:** 4
+**Current Phase Name:** Results Workspace
 **Total Phases:** 5
 **Current Plan:** 0
 **Total Plans in Phase:** 3
 **Status:** Ready for next phase
-**Last Activity:** 2026-03-12 — Completed Phase 2 run input workflow
-**Last Activity Description:** Upload staging, validation, and bundled site-mapping-aware UI are ready for the frozen V5 run integration
-**Progress:** [██████████] 100%
+**Last Activity:** 2026-03-13 — Completed Phase 3 V5 calculation runs
+**Last Activity Description:** The wizard can now suggest a run month, execute frozen V5, preserve run status, and block stale-result review until rerun
+**Progress:** [██████░░░░] 60%
 
-Phase: 3 of 5 (V5 Calculation Runs)
+Phase: 4 of 5 (Results Workspace)
 Plan: 0 of 3 in current phase
 Status: Ready for next phase
-Last activity: 2026-03-12 — Completed Phase 2 run input workflow
+Last activity: 2026-03-13 — Completed Phase 3 V5 calculation runs
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 6 min
-- Total execution time: 0.7 hours
+- Total plans completed: 9
+- Average duration: 6.3 min
+- Total execution time: 1.0 hours
 
 **By Phase:**
 
@@ -56,10 +56,11 @@ Last activity: 2026-03-12 — Completed Phase 2 run input workflow
 |-------|-------|-------|----------|
 | 01 | 3 | 21 min | 7 min |
 | 02 | 3 | 20 min | 6.7 min |
+| 03 | 3 | 18 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3 min), 01-03 (10 min), 02-01 (6 min), 02-02 (3 min), 02-03 (11 min)
-- Trend: Phase 2 stayed inside a fast feedback loop while expanding from services into the browser upload workflow.
+- Last 5 plans: 02-02 (3 min), 02-03 (11 min), 03-01 (3 min), 03-02 (8 min), 03-03 (7 min)
+- Trend: Phase 3 kept the same fast feedback loop while moving from service contracts into the browser execution path.
 
 **Recent plan metrics:**
 - Phase 01 P01 | 8 min | 3 tasks | 11 files
@@ -68,6 +69,9 @@ Last activity: 2026-03-12 — Completed Phase 2 run input workflow
 - Phase 02 P01 | 6 min | 3 tasks | 3 files
 - Phase 02 P02 | 3 min | 3 tasks | 2 files
 - Phase 02 P03 | 11 min | 3 tasks | 4 files
+- Phase 03 P01 | 3 min | 3 tasks | 3 files
+- Phase 03 P02 | 8 min | 3 tasks | 3 files
+- Phase 03 P03 | 7 min | 3 tasks | 3 files
 
 ## Accumulated Context
 
@@ -95,6 +99,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Limited upload summaries to row counts and date/month hints instead of preview tables or business QA.
 - [Phase 02]: Kept the upload step inside the existing wizard shell and gated navigation from a shared readiness payload.
 - [Phase 02]: Sourced bundled site-mapping visibility from the V5 boundary so Phase 2 and Phase 3 share one mapping contract.
+- [Phase 03]: Kept one structured run payload in session state instead of scattering selected month and status across widget-local keys.
+- [Phase 03]: Reused Phase 2 upload readiness as the run precondition instead of duplicating validation checks in the run step.
+- [Phase 03]: Blocked review/export after staged inputs changed so successful runs cannot be treated as current once uploads are replaced.
 
 ### Pending Todos
 
@@ -106,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T10:19:28.456Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-v5-calculation-runs/03-CONTEXT.md
+Last session: 2026-03-13T04:20:00.000Z
+Stopped at: Phase 4 ready for context capture
+Resume file: .planning/ROADMAP.md
