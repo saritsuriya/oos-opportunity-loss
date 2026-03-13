@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+import tempfile
 
 from streamlit.testing.v1 import AppTest
 
@@ -19,6 +20,34 @@ def test_v5_boundary_exposes_frozen_pipeline_symbols() -> None:
     assert overview.site_mapping_path.endswith("Site mapping.csv")
 
     symbols = load_frozen_v5_symbols()
+
+    assert set(symbols) == {
+        "InputPaths",
+        "DataLoaderV5",
+        "ModelConfig",
+        "DailyOOSOpportunityV5",
+        "ReporterV5",
+    }
+
+
+def test_v5_boundary_loads_symbols_when_repo_root_is_missing_from_syspath(
+    monkeypatch,
+) -> None:
+    repo_root = str(ROOT)
+    original_path = list(sys.path)
+    sys.path[:] = [entry for entry in sys.path if entry not in {"", repo_root}]
+    monkeypatch.chdir(tempfile.gettempdir())
+    for module_name in (
+        "v5_daily_oos_opportunity.data_loader_v5",
+        "v5_daily_oos_opportunity.analyzer_v5",
+        "v5_daily_oos_opportunity.reporter_v5",
+    ):
+        sys.modules.pop(module_name, None)
+
+    try:
+        symbols = load_frozen_v5_symbols()
+    finally:
+        sys.path[:] = original_path
 
     assert set(symbols) == {
         "InputPaths",

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
+import sys
 from typing import Any
 
 import pandas as pd
@@ -307,6 +308,7 @@ def get_bundled_site_mapping_status() -> BundledSiteMappingStatus:
 
 
 def load_frozen_v5_symbols() -> dict[str, Any]:
+    _ensure_repo_root_on_syspath()
     loader_module = import_module("v5_daily_oos_opportunity.data_loader_v5")
     analyzer_module = import_module("v5_daily_oos_opportunity.analyzer_v5")
     reporter_module = import_module("v5_daily_oos_opportunity.reporter_v5")
@@ -318,3 +320,9 @@ def load_frozen_v5_symbols() -> dict[str, Any]:
         "DailyOOSOpportunityV5": getattr(analyzer_module, "DailyOOSOpportunityV5"),
         "ReporterV5": getattr(reporter_module, "ReporterV5"),
     }
+
+
+def _ensure_repo_root_on_syspath() -> None:
+    repo_root_text = str(REPO_ROOT)
+    if repo_root_text not in sys.path:
+        sys.path.insert(0, repo_root_text)
