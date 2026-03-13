@@ -11,9 +11,14 @@ import streamlit as st
 try:
     from streamlit_app.runtime.temp_workspace import ensure_session_workspace
     from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY, ensure_upload_registry
+    from streamlit_app.services.run_workflow import (
+        RUN_WORKFLOW_STATE_KEY,
+        ensure_run_workflow_state,
+    )
 except ModuleNotFoundError:
     from runtime.temp_workspace import ensure_session_workspace
     from services.upload_staging import UPLOAD_REGISTRY_KEY, ensure_upload_registry
+    from services.run_workflow import RUN_WORKFLOW_STATE_KEY, ensure_run_workflow_state
 
 
 @dataclass(frozen=True)
@@ -65,7 +70,7 @@ def bootstrap_session_state() -> dict[str, object]:
         "workspace_mode": "Stateless MVP",
         "workspace_scope": "Per-session temporary files only",
         "site_mapping_mode": "Bundled system configuration",
-        "active_run_status": "Not started",
+        "active_run_status": "Idle",
         "wizard_steps": [asdict(step) for step in get_wizard_steps()],
     }
     for key, value in defaults.items():
@@ -78,8 +83,14 @@ def bootstrap_session_state() -> dict[str, object]:
         st.session_state[key] = value
 
     ensure_upload_registry(st.session_state)
+    ensure_run_workflow_state(st.session_state)
 
-    state_keys = [*defaults.keys(), *workspace_state.keys(), UPLOAD_REGISTRY_KEY]
+    state_keys = [
+        *defaults.keys(),
+        *workspace_state.keys(),
+        UPLOAD_REGISTRY_KEY,
+        RUN_WORKFLOW_STATE_KEY,
+    ]
     return {key: st.session_state[key] for key in state_keys}
 
 
