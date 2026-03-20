@@ -1,6 +1,18 @@
 """Streamlit entrypoint for the OOS opportunity-loss workspace."""
 
+from pathlib import Path
+import sys
+
 import streamlit as st
+
+
+def _ensure_repo_root_on_syspath() -> None:
+    repo_root = str(Path(__file__).resolve().parents[1])
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+
+
+_ensure_repo_root_on_syspath()
 
 try:
     from streamlit_app.runtime.session_state import bootstrap_session_state
