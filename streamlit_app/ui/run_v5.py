@@ -8,7 +8,10 @@ from typing import Mapping
 
 import streamlit as st
 
+from channel_profiles import get_channel_profile
+
 try:
+    from streamlit_app.services.channel_state import get_selected_channel
     from streamlit_app.services.run_workflow import (
         RUN_STATUS_FAILED,
         RUN_STATUS_RUNNING,
@@ -19,6 +22,7 @@ try:
     )
     from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY
 except ModuleNotFoundError:
+    from services.channel_state import get_selected_channel
     from services.run_workflow import (
         RUN_STATUS_FAILED,
         RUN_STATUS_RUNNING,
@@ -34,8 +38,10 @@ def render_run_v5_step() -> None:
     run_state = sync_run_workflow_state(st.session_state)
     upload_readiness = st.session_state.get("upload_step_readiness", {})
     uploads_ready = bool(upload_readiness.get("is_ready")) if isinstance(upload_readiness, Mapping) else False
+    channel_label = get_channel_profile(get_selected_channel(st.session_state)).label
 
     _render_run_metrics(run_state)
+    st.caption(f"Active channel: {channel_label}")
     _render_staged_input_recap()
     if uploads_ready:
         run_state = _render_month_controls(run_state)

@@ -70,7 +70,7 @@ def test_build_run_request_uses_staged_inputs_and_selected_month(
 
     monkeypatch.setattr(
         "streamlit_app.services.v5_boundary.locate_bundled_site_mapping",
-        lambda: site_mapping_path,
+        lambda *_args, **_kwargs: site_mapping_path,
     )
 
     request = build_run_request(
@@ -90,17 +90,51 @@ def test_build_run_request_uses_staged_inputs_and_selected_month(
         staged_registry["sku_live"]["current_file"]["staged_path"]
     ).resolve()
     assert request.site_mapping_path == site_mapping_path.resolve()
+    assert request.channel_key == "th"
     assert request.eval_year == 2026
     assert request.eval_month == 4
     assert request.output_dir == (workspace_root / "outputs").resolve()
     assert request.output_workbook == request.artifacts.workbook
     assert request.artifacts.workbook.parent == request.output_dir
-    assert request.artifacts.workbook.name == "OOS_Opportunity_Lost_2026-04_V5.xlsx"
+    assert request.artifacts.workbook.name == "OOS_Opportunity_Lost_TH_2026-04_V5.xlsx"
     assert request.artifacts.detail_csv.parent == request.output_dir
     assert request.artifacts.summary_site_csv.parent == request.output_dir
     assert request.artifacts.summary_sku_csv.parent == request.output_dir
     assert request.artifacts.summary_total_csv.parent == request.output_dir
     assert request.artifacts.qa_summary_csv.parent == request.output_dir
+
+
+def test_build_run_request_uses_bundled_site_mapping_for_non_th_channel(
+    tmp_path: Path, monkeypatch
+) -> None:
+    workspace_root = tmp_path / "session-zeta"
+    staged_registry = _build_staged_registry(
+        workspace_root,
+        sales_name="sales-cn.xlsx",
+        stock_dates=("2026-02-01", "2026-02-14"),
+        sku_name="sku-cn.xlsx",
+    )
+    bundled_site_mapping_path = workspace_root / "bundled-site-map-cn.xlsx"
+    bundled_site_mapping_path.write_text(
+        "Virtual Location,Site,Active\nwh-bkk,1001,X\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "streamlit_app.services.v5_boundary.locate_bundled_site_mapping",
+        lambda *_args, **_kwargs: bundled_site_mapping_path,
+    )
+
+    request = build_run_request(
+        workspace_root=workspace_root,
+        staged_upload_registry=staged_registry,
+        channel_key="kingpowercn",
+        eval_year=2026,
+        eval_month=2,
+    )
+
+    assert request.channel_key == "kingpowercn"
+    assert request.site_mapping_path == bundled_site_mapping_path.resolve()
 
 
 def test_execute_frozen_v5_run_returns_structured_success_payload(
@@ -121,7 +155,7 @@ def test_execute_frozen_v5_run_returns_structured_success_payload(
 
     monkeypatch.setattr(
         "streamlit_app.services.v5_boundary.locate_bundled_site_mapping",
-        lambda: site_mapping_path,
+        lambda *_args, **_kwargs: site_mapping_path,
     )
 
     request = build_run_request(
@@ -150,6 +184,7 @@ def test_execute_frozen_v5_run_returns_structured_success_payload(
     assert captured["daily_stock_path"] == str(request.daily_stock_path)
     assert captured["site_mapping_path"] == str(request.site_mapping_path)
     assert captured["product_path"] == str(request.product_path)
+    assert captured["channel_key"] == "th"
     assert captured["eval_year"] == 2026
     assert captured["eval_month"] == 4
     assert captured["baseline_recent_months"] == 6
@@ -178,7 +213,7 @@ def test_execute_frozen_v5_run_returns_structured_failure_payload(
 
     monkeypatch.setattr(
         "streamlit_app.services.v5_boundary.locate_bundled_site_mapping",
-        lambda: site_mapping_path,
+        lambda *_args, **_kwargs: site_mapping_path,
     )
 
     request = build_run_request(
@@ -214,15 +249,19 @@ def _build_staged_registry(
     sales_name: str,
     stock_dates: tuple[str, ...],
     sku_name: str,
+    site_mapping_name: str | None = None,
 ) -> dict[str, dict[str, object]]:
     input_dir = workspace_root / "inputs"
     sales_path = input_dir / "sales" / sales_name
     stock_path = input_dir / "stock" / "current.csv"
     sku_live_path = input_dir / "sku-live" / sku_name
+    site_mapping_path = input_dir / "site-mapping" / site_mapping_name if site_mapping_name else None
 
     sales_path.parent.mkdir(parents=True, exist_ok=True)
     stock_path.parent.mkdir(parents=True, exist_ok=True)
     sku_live_path.parent.mkdir(parents=True, exist_ok=True)
+    if site_mapping_path is not None:
+        site_mapping_path.parent.mkdir(parents=True, exist_ok=True)
 
     sales_path.write_text(
         "Purchase Date\tSku\tstock\tQuantity\tGross\tNet\tProduct Name\n",
@@ -244,7 +283,7 @@ def _build_staged_registry(
         }
     ).to_csv(sku_live_path, index=False)
 
-    return {
+    registry = {
         "sales": {
             "current_file": {
                 "slot_key": "sales",
@@ -267,6 +306,19 @@ def _build_staged_registry(
             }
         },
     }
+    if site_mapping_path is not None:
+        site_mapping_path.write_text(
+            "Virtual Location,Site,Active\nwh-bkk,1001,X\n",
+            encoding="utf-8",
+        )
+        registry["site_mapping"] = {
+            "current_file": {
+                "slot_key": "site_mapping",
+                "source_name": site_mapping_path.name,
+                "staged_path": str(site_mapping_path),
+            }
+        }
+    return registry
 
 
 def _build_success_symbols(captured: dict[str, object]) -> dict[str, object]:
@@ -278,15 +330,18 @@ def _build_success_symbols(captured: dict[str, object]) -> dict[str, object]:
             daily_stock_path: str,
             site_mapping_path: str,
             product_path: str,
+            channel_key: str,
         ) -> None:
             captured["orders_path"] = orders_path
             captured["daily_stock_path"] = daily_stock_path
             captured["site_mapping_path"] = site_mapping_path
             captured["product_path"] = product_path
+            captured["channel_key"] = channel_key
             self.orders_path = orders_path
             self.daily_stock_path = daily_stock_path
             self.site_mapping_path = site_mapping_path
             self.product_path = product_path
+            self.channel_key = channel_key
 
     class DataLoaderV5:
         def __init__(self, paths: InputPaths) -> None:

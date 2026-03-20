@@ -93,6 +93,105 @@ def write_valid_sku_csv(path: Path) -> None:
     ).to_csv(path, index=False)
 
 
+def write_cn_sales_workbook(path: Path) -> None:
+    with pd.ExcelWriter(path) as writer:
+        pd.DataFrame([["WEB-CN SALES"]]).to_excel(
+            writer,
+            sheet_name="WEB-CN",
+            index=False,
+            header=False,
+        )
+        pd.DataFrame(
+            {
+                "DATE": ["01.02.2026", "28.02.2026"],
+                "ORDER NO": ["ORDER-1", "ORDER-2"],
+                "SKU": ["SKU-1", "SKU-2"],
+                "DESCRIPTION": ["Bag", "Watch"],
+                "QTY": [2, 4],
+                "GROSS": [100, 200],
+                "NET": [90, 180],
+                "Storage Location": ["WH-BKK", "WH-BKK-DELIVERY"],
+            }
+        ).to_excel(writer, sheet_name="WEB-CN", index=False, startrow=1)
+
+
+def write_cn_sku_workbook(path: Path) -> None:
+    with pd.ExcelWriter(path) as writer:
+        for sheet_name in ("click&collect", "HomeDelivery"):
+            pd.DataFrame([[sheet_name]]).to_excel(writer, sheet_name=sheet_name, index=False, header=False)
+            pd.DataFrame(
+                {
+                    "SKU CODE": ["SKU-1", "SKU-2"],
+                    "DESCRIPTION": ["Bag", "Watch"],
+                    "商品名称": ["Bag CN", "Watch CN"],
+                    "WEB STATUS": ["LIVE", "HIDE"],
+                }
+            ).to_excel(writer, sheet_name=sheet_name, index=False, startrow=1)
+
+
+def write_site_mapping_workbook(path: Path) -> None:
+    with pd.ExcelWriter(path) as writer:
+        pd.DataFrame(
+            {
+                "Virtual Location": ["WH-BKK", "WH-BKK-DELIVERY"],
+                "Priority": [1, 1],
+                "Site": ["1110", "1112"],
+                "Sloc": ["11", "1001"],
+                "Excl. Safety": ["", ""],
+                "Active": ["X", "X"],
+                "Internal": ["WH-BKK", "WH-BKK-DL"],
+            }
+        ).to_excel(writer, sheet_name="Include", index=False)
+
+
+def write_mixed_master_site_mapping_workbook(path: Path) -> None:
+    with pd.ExcelWriter(path) as writer:
+        pd.DataFrame(
+            {
+                "Virtual Location": [
+                    "BKK-OUT",
+                    "WH-BKK",
+                    "WH-BKK-DELIVERY",
+                    "THT-FREEZONE",
+                    "WH-ONLINE-DMALL",
+                    "WH-ONLINE-JD",
+                    "WH-ONLINE-THT",
+                    "WH-ONLINE-TIKTOK",
+                ],
+                "Priority": [1, 1, 1, 1, 1, 1, 1, 1],
+                "Site": ["26GA", "1110", "1113", "12ZB", "12ZC", "12ZD", "12ZA", "13ZE"],
+                "Sloc": ["1", "11", "11", "1", "10", "10", "10", "10"],
+                "Excl. Safety": ["", "", "", "", "", "", "", ""],
+                "Active": ["X", "X", "X", "X", "X", "X", "X", "X"],
+                "Internal": [
+                    "BKK-OUT",
+                    "WH-BKK",
+                    "WH-BKK-DL",
+                    "THT-FREEZ",
+                    "WH-DMALL",
+                    "WH-JD",
+                    "WH-THT",
+                    "WH-TIKTOK",
+                ],
+            }
+        ).to_excel(writer, sheet_name="Include", index=False)
+
+
+def write_irrelevant_site_mapping_workbook(path: Path) -> None:
+    with pd.ExcelWriter(path) as writer:
+        pd.DataFrame(
+            {
+                "Virtual Location": ["BKK-OUT", "WH-BKK"],
+                "Priority": [1, 1],
+                "Site": ["26GA", "1110"],
+                "Sloc": ["1", "11"],
+                "Excl. Safety": ["", ""],
+                "Active": ["X", "X"],
+                "Internal": ["BKK-OUT", "WH-BKK"],
+            }
+        ).to_excel(writer, sheet_name="Include", index=False)
+
+
 def write_near_empty_sku_csv(path: Path) -> None:
     pd.DataFrame({"skuNo": ["SKU-1"], "productName": ["Bag"], "status": ["Live"]}).to_csv(path, index=False)
 
@@ -252,6 +351,68 @@ def test_warnings_include_near_empty_warning_for_sku_live(tmp_path: Path) -> Non
     assert result.summary.month_hints == ()
 
 
+def test_validation_contract_accepts_kingpowercn_workbooks(tmp_path: Path) -> None:
+    sales_metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="sales",
+        filename="sales-cn.xlsx",
+        writer=write_cn_sales_workbook,
+    )
+    sku_metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="sku_live",
+        filename="sku-cn.xlsx",
+        writer=write_cn_sku_workbook,
+    )
+    site_mapping_metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="site_mapping",
+        filename="site-mapping.xlsx",
+        writer=write_site_mapping_workbook,
+    )
+
+    sales_result = validate_staged_input(sales_metadata, channel_key="kingpowercn")
+    sku_result = validate_staged_input(sku_metadata, channel_key="kingpowercn")
+    site_mapping_result = validate_staged_input(site_mapping_metadata, channel_key="kingpowercn")
+
+    assert sales_result.is_valid is True
+    assert sales_result.summary.date_field == "DATE"
+    assert sales_result.summary.month_hints == ("2026-02",)
+    assert sku_result.is_valid is True
+    assert sku_result.summary.row_count == 4
+    assert site_mapping_result.is_valid is True
+    assert site_mapping_result.summary.row_count == 2
+
+
+def test_validation_contract_accepts_mixed_master_site_mapping_for_tht(tmp_path: Path) -> None:
+    site_mapping_metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="site_mapping",
+        filename="site-mapping-master.xlsx",
+        writer=write_mixed_master_site_mapping_workbook,
+    )
+
+    result = validate_staged_input(site_mapping_metadata, channel_key="tht")
+
+    assert result.is_valid is True
+    assert result.errors == ()
+    assert result.summary.row_count == 8
+
+
+def test_validation_contract_rejects_site_mapping_without_rows_for_selected_channel(tmp_path: Path) -> None:
+    site_mapping_metadata = write_tabular_metadata(
+        tmp_path,
+        slot_key="site_mapping",
+        filename="site-mapping-irrelvant.xlsx",
+        writer=write_irrelevant_site_mapping_workbook,
+    )
+
+    result = validate_staged_input(site_mapping_metadata, channel_key="tht")
+
+    assert result.is_valid is False
+    assert [issue.code for issue in result.errors] == ["site_mapping_no_channel_rows"]
+
+
 @pytest.mark.parametrize(
     ("slot_key", "filename", "writer", "expected_row_count"),
     (
@@ -260,6 +421,7 @@ def test_warnings_include_near_empty_warning_for_sku_live(tmp_path: Path) -> Non
         ("sales", "sales.tsv", write_valid_sales_tsv, 2),
         ("stock", "stock.csv", write_valid_stock_csv, 2),
         ("sku_live", "sku-live.csv", write_valid_sku_csv, 2),
+        ("site_mapping", "site-mapping.xlsx", write_site_mapping_workbook, 2),
     ),
 )
 def test_validation_contract_accepts_supported_formats_for_each_slot(

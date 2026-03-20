@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Mapping, MutableMapping
 
 try:
+    from streamlit_app.services.channel_state import get_selected_channel
     from streamlit_app.services.run_execution import (
         build_run_request,
         execute_frozen_v5_run,
@@ -13,6 +14,7 @@ try:
     )
     from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY
 except ModuleNotFoundError:
+    from services.channel_state import get_selected_channel
     from services.run_execution import (
         build_run_request,
         execute_frozen_v5_run,
@@ -61,8 +63,9 @@ def sync_run_workflow_state(
     payload = ensure_run_workflow_state(state)
     registry = state.get(UPLOAD_REGISTRY_KEY)
     payload["current_input_signature"] = _build_registry_signature(registry)
+    payload["selected_channel_key"] = get_selected_channel(state)
 
-    suggestion = _resolve_month_suggestion(registry)
+    suggestion = _resolve_month_suggestion(registry, payload["selected_channel_key"])
     payload["suggested_eval_year"] = suggestion["eval_year"]
     payload["suggested_eval_month"] = suggestion["eval_month"]
     payload["suggested_label"] = suggestion["label"]
@@ -130,6 +133,7 @@ def run_frozen_v5_for_session(
         request = build_request_fn(
             workspace_root=str(state["workspace_root"]),
             staged_upload_registry=state[UPLOAD_REGISTRY_KEY],
+            channel_key=get_selected_channel(state),
             eval_year=int(payload["selected_eval_year"]),
             eval_month=int(payload["selected_eval_month"]),
         )
@@ -206,6 +210,7 @@ def _default_run_workflow_state() -> dict[str, object]:
         "selected_eval_year": None,
         "selected_eval_month": None,
         "selected_period": None,
+        "selected_channel_key": None,
         "suggested_eval_year": None,
         "suggested_eval_month": None,
         "suggested_label": None,
@@ -258,6 +263,7 @@ def _compute_blocking_messages(
 
 def _resolve_month_suggestion(
     registry: object,
+    channel_key: object,
 ) -> dict[str, object]:
     if not isinstance(registry, Mapping):
         return {
@@ -270,7 +276,10 @@ def _resolve_month_suggestion(
         }
 
     try:
-        suggestion = suggest_evaluation_month(registry)
+        suggestion = suggest_evaluation_month(
+            registry,
+            channel_key=str(channel_key or ""),
+        )
     except Exception as exc:
         return {
             "eval_year": None,

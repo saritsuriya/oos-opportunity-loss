@@ -37,7 +37,7 @@ def test_load_results_workspace_reads_csv_artifacts_and_manifest(tmp_path: Path)
     assert payload.export_manifest[0].key == "workbook"
     assert payload.export_manifest[1].key == "summary_total_csv"
     manifest_payload = result.as_dict()["payload"]["export_manifest"]
-    assert manifest_payload[0]["filename"] == "OOS_Opportunity_Lost_2026-03_V5.xlsx"
+    assert manifest_payload[0]["filename"] == "OOS_Opportunity_Lost_TH_2026-03_V5.xlsx"
 
 
 def test_load_results_workspace_reads_workbook_only_trust_sheets(tmp_path: Path) -> None:
@@ -99,8 +99,8 @@ def _build_completed_run_state(
 ) -> dict[str, object]:
     output_dir = tmp_path / "outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
-    base = output_dir / "OOS_Opportunity_Lost_2026-03_V5"
-    workbook = output_dir / "OOS_Opportunity_Lost_2026-03_V5.xlsx"
+    base = output_dir / "OOS_Opportunity_Lost_TH_2026-03_V5"
+    workbook = output_dir / "OOS_Opportunity_Lost_TH_2026-03_V5.xlsx"
 
     summary_total = pd.DataFrame(
         [

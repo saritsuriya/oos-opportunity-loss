@@ -9,6 +9,8 @@ from typing import Any, Mapping
 
 import pandas as pd
 
+from channel_profiles import CHANNEL_TH, get_channel_profile, normalize_channel_key
+
 try:
     from streamlit_app.services.v5_boundary import (
         FrozenV5RunRequest,
@@ -30,13 +32,17 @@ class StagedRunInputs:
     sales_path: Path
     stock_path: Path
     sku_live_path: Path
+    site_mapping_path: Path | None = None
 
     def as_dict(self) -> dict[str, str]:
-        return {
+        payload = {
             "sales_path": str(self.sales_path),
             "stock_path": str(self.stock_path),
             "sku_live_path": str(self.sku_live_path),
         }
+        if self.site_mapping_path is not None:
+            payload["site_mapping_path"] = str(self.site_mapping_path)
+        return payload
 
 
 @dataclass(frozen=True)
@@ -132,11 +138,18 @@ class V5RunResult:
 
 def resolve_staged_run_inputs(
     staged_upload_registry: Mapping[str, object],
+    *,
+    channel_key: str = CHANNEL_TH,
 ) -> StagedRunInputs:
+    normalized_channel = normalize_channel_key(channel_key)
+    channel_profile = get_channel_profile(normalized_channel)
     return StagedRunInputs(
         sales_path=_resolve_staged_path(staged_upload_registry, "sales"),
         stock_path=_resolve_staged_path(staged_upload_registry, "stock"),
         sku_live_path=_resolve_staged_path(staged_upload_registry, "sku_live"),
+        site_mapping_path=_resolve_staged_path(staged_upload_registry, "site_mapping")
+        if not channel_profile.uses_bundled_site_mapping
+        else None,
     )
 
 
@@ -187,8 +200,10 @@ def suggest_evaluation_month_from_stock_file(
 
 def suggest_evaluation_month(
     staged_upload_registry: Mapping[str, object],
+    *,
+    channel_key: str = CHANNEL_TH,
 ) -> SuggestedEvaluationMonth:
-    staged_inputs = resolve_staged_run_inputs(staged_upload_registry)
+    staged_inputs = resolve_staged_run_inputs(staged_upload_registry, channel_key=channel_key)
     return suggest_evaluation_month_from_stock_file(staged_inputs.stock_path)
 
 
@@ -196,17 +211,21 @@ def build_run_request(
     *,
     workspace_root: str | Path,
     staged_upload_registry: Mapping[str, object],
+    channel_key: str = CHANNEL_TH,
     eval_year: int,
     eval_month: int,
     baseline_recent_months: int = 6,
     baseline_fallback_months: int = 6,
 ) -> FrozenV5RunRequest:
-    staged_inputs = resolve_staged_run_inputs(staged_upload_registry)
+    normalized_channel = normalize_channel_key(channel_key)
+    staged_inputs = resolve_staged_run_inputs(staged_upload_registry, channel_key=normalized_channel)
     return build_frozen_v5_run_request(
         workspace_root=workspace_root,
         orders_path=staged_inputs.sales_path,
         daily_stock_path=staged_inputs.stock_path,
         product_path=staged_inputs.sku_live_path,
+        site_mapping_path=staged_inputs.site_mapping_path,
+        channel_key=normalized_channel,
         eval_year=eval_year,
         eval_month=eval_month,
         baseline_recent_months=baseline_recent_months,

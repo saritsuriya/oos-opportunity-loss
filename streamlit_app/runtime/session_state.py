@@ -10,6 +10,12 @@ import streamlit as st
 
 try:
     from streamlit_app.runtime.temp_workspace import ensure_session_workspace
+    from streamlit_app.services.channel_state import (
+        SELECTED_CHANNEL_KEY,
+        SELECTED_CHANNEL_WIDGET_KEY,
+        ensure_selected_channel,
+        sync_selected_channel_widget,
+    )
     from streamlit_app.services.upload_staging import UPLOAD_REGISTRY_KEY, ensure_upload_registry
     from streamlit_app.services.run_workflow import (
         RUN_WORKFLOW_STATE_KEY,
@@ -17,6 +23,12 @@ try:
     )
 except ModuleNotFoundError:
     from runtime.temp_workspace import ensure_session_workspace
+    from services.channel_state import (
+        SELECTED_CHANNEL_KEY,
+        SELECTED_CHANNEL_WIDGET_KEY,
+        ensure_selected_channel,
+        sync_selected_channel_widget,
+    )
     from services.upload_staging import UPLOAD_REGISTRY_KEY, ensure_upload_registry
     from services.run_workflow import RUN_WORKFLOW_STATE_KEY, ensure_run_workflow_state
 
@@ -71,6 +83,8 @@ def bootstrap_session_state() -> dict[str, object]:
         "workspace_scope": "Per-session temporary files only",
         "site_mapping_mode": "Bundled system configuration",
         "active_run_status": "Idle",
+        SELECTED_CHANNEL_KEY: "th",
+        SELECTED_CHANNEL_WIDGET_KEY: "th",
         "wizard_steps": [asdict(step) for step in get_wizard_steps()],
     }
     for key, value in defaults.items():
@@ -83,6 +97,8 @@ def bootstrap_session_state() -> dict[str, object]:
         st.session_state[key] = value
 
     ensure_upload_registry(st.session_state)
+    ensure_selected_channel(st.session_state)
+    sync_selected_channel_widget(st.session_state)
     ensure_run_workflow_state(st.session_state)
 
     state_keys = [

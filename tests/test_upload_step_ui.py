@@ -65,7 +65,7 @@ def test_upload_step_site_map_panel_shows_bundled_status_and_summaries(
     site_map_status = get_bundled_site_mapping_status()
 
     assert len(app.exception) == 0
-    assert any(node.value == "Bundled Site Mapping" for node in app.subheader)
+    assert any(node.value == "Site Mapping Status" for node in app.subheader)
     assert any(node.value == site_map_status.status_label for node in app.success)
     assert any(node.value == site_map_status.path for node in app.caption)
     assert any("Sample virtual sites:" in node.value for node in app.markdown)
@@ -125,7 +125,7 @@ def test_upload_step_refreshes_readiness_after_last_slot_is_processed(tmp_path: 
 
     original_render_slot_card = upload_inputs_ui._render_slot_card
 
-    def _inject_final_slot(slot_key, slot_state, validation_results):
+    def _inject_final_slot(slot_key, slot_state, validation_results, *, channel_key):
         if slot_key == "sku_live" and not slot_state.get("current_file"):
             registry = app.session_state[UPLOAD_REGISTRY_KEY]
             staged = stage_uploaded_file(
@@ -134,9 +134,17 @@ def test_upload_step_refreshes_readiness_after_last_slot_is_processed(tmp_path: 
                 workspace_input_dir=Path(app.session_state["workspace_input_dir"]),
                 registry=registry,
             )
-            validation_results["sku_live"] = validate_staged_input(staged).as_dict()
+            validation_results["sku_live"] = validate_staged_input(
+                staged,
+                channel_key=channel_key,
+            ).as_dict()
             slot_state = registry["sku_live"]
-        return original_render_slot_card(slot_key, slot_state, validation_results)
+        return original_render_slot_card(
+            slot_key,
+            slot_state,
+            validation_results,
+            channel_key=channel_key,
+        )
 
     monkeypatch.setattr(upload_inputs_ui, "_render_slot_card", _inject_final_slot)
     app.run()

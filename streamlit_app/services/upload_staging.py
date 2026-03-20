@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any, Mapping, MutableMapping
 from uuid import uuid4
 
+from channel_profiles import get_required_upload_slots
+
 UPLOAD_REGISTRY_KEY = "staged_input_registry"
 
 
@@ -54,14 +56,26 @@ _UPLOAD_SLOTS: tuple[UploadSlot, ...] = (
         key="sku_live",
         label="SKU / Live",
         directory_name="sku-live",
-        accepted_extensions=(".csv",),
+        accepted_extensions=(".xlsx", ".xlsm", ".xls", ".csv"),
         default_extension=".csv",
+    ),
+    UploadSlot(
+        key="site_mapping",
+        label="Site Mapping",
+        directory_name="site-mapping",
+        accepted_extensions=(".xlsx", ".xlsm", ".xls", ".csv"),
+        default_extension=".xlsx",
     ),
 )
 
 
 def get_upload_slots() -> tuple[UploadSlot, ...]:
     return _UPLOAD_SLOTS
+
+
+def get_active_upload_slots(channel_key: str) -> tuple[UploadSlot, ...]:
+    required_keys = set(get_required_upload_slots(channel_key))
+    return tuple(slot for slot in get_upload_slots() if slot.key in required_keys)
 
 
 def get_upload_slot(slot_key: str) -> UploadSlot:

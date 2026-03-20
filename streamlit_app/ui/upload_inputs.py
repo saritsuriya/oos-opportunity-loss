@@ -7,20 +7,34 @@ from typing import Any, Mapping
 
 import streamlit as st
 
+from channel_profiles import get_channel_profiles, get_required_upload_slots
+
 try:
+    from streamlit_app.services.channel_state import (
+        SELECTED_CHANNEL_WIDGET_KEY,
+        get_selected_channel,
+        get_selected_channel_label,
+    )
     from streamlit_app.services.input_validation import validate_staged_input
     from streamlit_app.services.upload_staging import (
         UPLOAD_REGISTRY_KEY,
         ensure_upload_registry,
+        get_active_upload_slots,
         get_upload_slots,
         stage_uploaded_file,
     )
     from streamlit_app.services.v5_boundary import get_bundled_site_mapping_status
 except ModuleNotFoundError:
+    from services.channel_state import (
+        SELECTED_CHANNEL_WIDGET_KEY,
+        get_selected_channel,
+        get_selected_channel_label,
+    )
     from services.input_validation import validate_staged_input
     from services.upload_staging import (
         UPLOAD_REGISTRY_KEY,
         ensure_upload_registry,
+        get_active_upload_slots,
         get_upload_slots,
         stage_uploaded_file,
     )
@@ -34,6 +48,7 @@ _SLOT_DESCRIPTIONS = {
     "sales": "Monthly sales export used as the orders input for the frozen V5 run.",
     "stock": "Daily stock CSV with posting date, site code, article code, and stock balance.",
     "sku_live": "Current SKU/live CSV that defines the active product universe for the run.",
+    "site_mapping": "Site mapping file that links stock site codes to the selected channel virtual sites.",
 }
 
 
@@ -42,23 +57,25 @@ def render_upload_inputs_step() -> None:
 
     registry = _ensure_registry()
     validation_results = st.session_state.setdefault(UPLOAD_VALIDATION_RESULTS_KEY, {})
+    channel_key = _render_channel_selector()
 
-    _sync_existing_validations(registry, validation_results)
+    _sync_existing_validations(registry, validation_results, channel_key=channel_key)
     readiness_placeholder = st.empty()
 
-    columns = st.columns(len(get_upload_slots()))
-    for column, slot in zip(columns, get_upload_slots(), strict=False):
+    active_slots = get_active_upload_slots(channel_key)
+    columns = st.columns(len(active_slots))
+    for column, slot in zip(columns, active_slots, strict=False):
         with column:
             with st.container(border=True):
-                _render_slot_card(slot.key, registry[slot.key], validation_results)
+                _render_slot_card(slot.key, registry[slot.key], validation_results, channel_key=channel_key)
 
-    _sync_existing_validations(registry, validation_results)
-    readiness = _compute_readiness(registry, validation_results)
+    _sync_existing_validations(registry, validation_results, channel_key=channel_key)
+    readiness = _compute_readiness(registry, validation_results, channel_key=channel_key)
     with readiness_placeholder.container():
         _render_readiness_banner(readiness)
 
     st.divider()
-    _render_site_mapping_panel()
+    _render_site_mapping_panel(channel_key)
     st.session_state[UPLOAD_STEP_READINESS_KEY] = readiness
 
 
@@ -72,20 +89,27 @@ def _ensure_registry() -> dict[str, dict[str, object]]:
 def _sync_existing_validations(
     registry: Mapping[str, Mapping[str, object]],
     validation_results: dict[str, dict[str, object]],
+    *,
+    channel_key: str,
 ) -> None:
     for slot in get_upload_slots():
         current_file = registry[slot.key].get("current_file")
         if not isinstance(current_file, Mapping):
             validation_results.pop(slot.key, None)
             continue
-        if _validation_matches_current_file(current_file, validation_results.get(slot.key)):
+        if _validation_matches_current_file(current_file, validation_results.get(slot.key), channel_key=channel_key):
             continue
-        validation_results[slot.key] = validate_staged_input(current_file).as_dict()
+        validation_results[slot.key] = validate_staged_input(
+            current_file,
+            channel_key=channel_key,
+        ).as_dict()
 
 
 def _validation_matches_current_file(
     current_file: Mapping[str, object],
     validation_result: Mapping[str, object] | None,
+    *,
+    channel_key: str,
 ) -> bool:
     if not isinstance(validation_result, Mapping):
         return False
@@ -93,6 +117,7 @@ def _validation_matches_current_file(
         validation_result.get("slot_key") == current_file.get("slot_key")
         and validation_result.get("source_name") == current_file.get("source_name")
         and validation_result.get("staged_path") == current_file.get("staged_path")
+        and validation_result.get("channel_key") == channel_key
     )
 
 
@@ -118,6 +143,8 @@ def _render_slot_card(
     slot_key: str,
     slot_state: Mapping[str, object],
     validation_results: dict[str, dict[str, object]],
+    *,
+    channel_key: str,
 ) -> None:
     slot_label = str(slot_state["label"])
     accepted_extensions = tuple(str(extension) for extension in slot_state["accepted_extensions"])
@@ -132,7 +159,12 @@ def _render_slot_card(
         key=f"upload_{slot_key}_widget",
     )
     if uploaded_file is not None:
-        _process_uploaded_file(slot_key, uploaded_file, validation_results)
+        _process_uploaded_file(
+            slot_key,
+            uploaded_file,
+            validation_results,
+            channel_key=channel_key,
+        )
 
     current_file = slot_state.get("current_file")
     if not isinstance(current_file, Mapping):
@@ -147,6 +179,8 @@ def _process_uploaded_file(
     slot_key: str,
     uploaded_file: Any,
     validation_results: dict[str, dict[str, object]],
+    *,
+    channel_key: str,
 ) -> None:
     upload_signatures = st.session_state.setdefault(UPLOAD_UPLOAD_SIGNATURES_KEY, {})
     signature = _build_upload_signature(uploaded_file)
@@ -160,7 +194,10 @@ def _process_uploaded_file(
         workspace_input_dir=str(st.session_state["workspace_input_dir"]),
         registry=registry,
     )
-    validation_results[slot_key] = validate_staged_input(staged_file).as_dict()
+    validation_results[slot_key] = validate_staged_input(
+        staged_file,
+        channel_key=channel_key,
+    ).as_dict()
     upload_signatures[slot_key] = signature
 
 
@@ -231,12 +268,17 @@ def _render_validation_summary(validation_result: Mapping[str, object]) -> None:
 def _compute_readiness(
     registry: Mapping[str, Mapping[str, object]],
     validation_results: Mapping[str, Mapping[str, object]],
+    *,
+    channel_key: str,
 ) -> dict[str, object]:
     ready_slots = 0
     warning_count = 0
     blocking_messages: list[str] = []
+    required_slots = get_required_upload_slots(channel_key)
 
     for slot in get_upload_slots():
+        if slot.key not in required_slots:
+            continue
         slot_state = registry[slot.key]
         current_file = slot_state.get("current_file")
         if not isinstance(current_file, Mapping):
@@ -257,11 +299,13 @@ def _compute_readiness(
         ready_slots += 1
 
     return {
-        "is_ready": ready_slots == len(get_upload_slots()) and not blocking_messages,
+        "is_ready": ready_slots == len(required_slots) and not blocking_messages,
         "ready_slots": ready_slots,
-        "total_slots": len(get_upload_slots()),
+        "total_slots": len(required_slots),
         "warning_count": warning_count,
         "blocking_messages": blocking_messages,
+        "channel_key": channel_key,
+        "channel_label": get_selected_channel_label(st.session_state),
     }
 
 
@@ -277,18 +321,18 @@ def _format_file_size(size_bytes: int) -> str:
     return f"{size_bytes / (1024 * 1024):.1f} MB"
 
 
-def _render_site_mapping_panel() -> None:
-    status = get_bundled_site_mapping_status()
+def _render_site_mapping_panel(channel_key: str) -> None:
+    status = get_bundled_site_mapping_status(channel_key)
 
     with st.container(border=True):
-        st.subheader("Bundled Site Mapping")
+        st.subheader("Site Mapping Status")
         if status.is_ready:
             st.success(status.status_label)
         else:
             st.error(status.status_label)
 
         path_col, row_col, virtual_col, site_col = st.columns(4)
-        path_col.metric("Mapping Source", "Bundled")
+        path_col.metric("Mapping Source", "Bundled" if status.is_ready else "Upload / Required")
         row_col.metric("Rows", status.active_mapping_rows if status.is_ready else status.total_rows)
         virtual_col.metric("Virtual Sites", status.virtual_site_count)
         site_col.metric("Mapped Sites", status.site_count)
@@ -300,3 +344,21 @@ def _render_site_mapping_panel() -> None:
             st.markdown(
                 "**Sample virtual sites:** " + ", ".join(status.sample_virtual_sites)
             )
+
+
+def _render_channel_selector() -> str:
+    profiles = get_channel_profiles()
+    current_channel = get_selected_channel(st.session_state)
+    option_keys = [profile.key for profile in profiles]
+    option_labels = {profile.key: profile.label for profile in profiles}
+    selected = st.selectbox(
+        "Channel",
+        options=option_keys,
+        index=option_keys.index(current_channel),
+        format_func=lambda key: option_labels[key],
+        key=SELECTED_CHANNEL_WIDGET_KEY,
+        help="Choose the channel profile before uploading files so validation and mapping rules stay correct.",
+    )
+    current_channel = str(selected)
+    st.caption(f"Selected channel: {option_labels[current_channel]}")
+    return current_channel

@@ -5,12 +5,14 @@ from __future__ import annotations
 import streamlit as st
 
 try:
+    from streamlit_app.services.channel_state import get_selected_channel_label
     from streamlit_app.services.run_workflow import RUN_WORKFLOW_STATE_KEY
     from streamlit_app.services.v5_boundary import get_boundary_overview
     from streamlit_app.ui.review_results import render_review_results_step
     from streamlit_app.ui.run_v5 import render_run_v5_step
     from streamlit_app.ui.upload_inputs import UPLOAD_STEP_READINESS_KEY, render_upload_inputs_step
 except ModuleNotFoundError:
+    from services.channel_state import get_selected_channel_label
     from services.run_workflow import RUN_WORKFLOW_STATE_KEY
     from services.v5_boundary import get_boundary_overview
     from ui.review_results import render_review_results_step
@@ -21,6 +23,7 @@ except ModuleNotFoundError:
 def _render_shell_summary() -> None:
     readiness = st.session_state.get(UPLOAD_STEP_READINESS_KEY, {})
     run_state = st.session_state.get(RUN_WORKFLOW_STATE_KEY, {})
+    channel_label = get_selected_channel_label(st.session_state)
 
     session_col, upload_col, run_col, mapping_col = st.columns(4)
     session_col.metric("Session", st.session_state["session_id"])
@@ -28,8 +31,8 @@ def _render_shell_summary() -> None:
         "Uploads Ready",
         f"{int(readiness.get('ready_slots', 0))}/{int(readiness.get('total_slots', 3))}",
     )
-    run_col.metric("Run Status", str(run_state.get("status_label", "Idle")))
-    mapping_col.metric("Site Mapping", "Bundled")
+    run_col.metric("Channel", channel_label)
+    mapping_col.metric("Run Status", str(run_state.get("status_label", "Idle")))
 
 
 def _render_workflow_overview() -> None:
@@ -47,14 +50,14 @@ def _render_workflow_overview() -> None:
 
 
 def _render_boundary_summary() -> None:
-    overview = get_boundary_overview()
+    overview = get_boundary_overview(st.session_state.get("selected_channel_key", "th"))
     with st.expander("System Context", expanded=False):
         st.markdown(
             "\n".join(
                 [
                     f"- Pipeline: {overview.pipeline_name}",
                     f"- Integration mode: {overview.integration_mode}",
-                    f"- Bundled site mapping: `{overview.site_mapping_path}`",
+                    f"- Site mapping source: `{overview.site_mapping_path}`",
                     "- Uploaded inputs and generated outputs remain scoped to the active session workspace.",
                     "- Persistence, duplicate detection, and stronger auth remain deferred beyond this phase.",
                 ]
